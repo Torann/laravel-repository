@@ -1,6 +1,7 @@
 # Laravel Super Repository
 
-[![Latest Stable Version](https://poser.pugx.org/torann/laravel-repository/v/stable.png)](https://packagist.org/packages/torann/laravel-repository) [![Total Downloads](https://poser.pugx.org/torann/laravel-repository/downloads.png)](https://packagist.org/packages/torann/laravel-repository)
+[![Latest Stable Version](https://poser.pugx.org/torann/laravel-repository/v/stable.png)](https://packagist.org/packages/torann/laravel-repository) [![Total Downloads](https://poser.pugx.org/torann/laravel-repository/downloads.png)](https://packagist.org/packages/torann/laravel-repository) [![Build Status](https://travis-ci.org/Torann/laravel-promise.svg?branch=master)](https://travis-ci.org/Torann/laravel-promise)
+
 
 The Laravel Repository package is meant to be a generic repository implementation for Laravel.
 
