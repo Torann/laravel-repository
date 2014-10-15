@@ -77,6 +77,16 @@ abstract class AbstractRepository
     }
 
     /**
+     * Return validator
+     *
+     * @return mixed $validator
+     */
+    public function getValidator()
+    {
+        return $this->validator;
+    }
+
+    /**
      * Return constant values
      *
      * Get constant values from repository.
@@ -105,13 +115,24 @@ abstract class AbstractRepository
     protected function perform($action, $object, $attributes = array(), $validate = true)
     {
         $perform = 'perform' . ucfirst($action);
-        if (!method_exists($this, $perform)) {
+
+        if (! method_exists($this, $perform)) {
             throw new \BadMethodCallException("Method $perform does not exist on this class");
         }
 
         // Validate data
-        if ($validate === true) {
-            if (!$this->valid($action, array_merge($attributes, ['id' => $object->id]))) return false;
+        if ($validate === true)
+        {
+            $constants = array();
+            $primary   = $object->getKeyName();
+
+            // Ensure the primary key is included for updates
+            if ($action === 'update' && $primary && !in_array($primary, $attributes))
+            {
+                $constants[$primary] = $object->getAttribute($primary);
+            }
+
+            if (! $this->valid($action, array_merge($attributes, $constants))) return false;
         }
 
         // Before action event
@@ -421,11 +442,11 @@ abstract class AbstractRepository
      * Delete a specific row within a range.
      *
      * @param  string $name
-     * @param  string $key
+     * @param  array  $key
      *
      * @return bool
      */
-    public function deleteManyIn($name, $key)
+    public function deleteManyIn($name, array $key)
     {
         $query = $this->newQuery()
             ->whereIn($name, $key);
@@ -538,11 +559,11 @@ abstract class AbstractRepository
      * Get a specific row within a range in the repository.
      *
      * @param  string $name
-     * @param  string $key
+     * @param  array  $key
      *
      * @return mixed
      */
-    public function getManyIn($name, $key)
+    public function getManyIn($name, array $key)
     {
         $query = $this->newQuery()
             ->whereIn($name, $key);

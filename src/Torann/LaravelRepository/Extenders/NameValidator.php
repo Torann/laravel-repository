@@ -24,9 +24,9 @@ class NameValidator extends Validator
     /**
      * Validate a name against an array of reserved names
      *
-     * @param string $attribute
-     * @param string $value
-     * @param array $parameters
+     * @param  string  $attribute
+     * @param  string  $value
+     * @param  array   $parameters
      * @return bool
      */
     public function validateName($attribute, $value, $parameters)

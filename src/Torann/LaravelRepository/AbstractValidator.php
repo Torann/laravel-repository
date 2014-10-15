@@ -7,14 +7,14 @@ abstract class AbstractValidator
     /**
      * The Validator instance
      *
-     * @var Illuminate\Validation\Factory
+     * @var \Illuminate\Validation\Factory
      */
     protected $validator;
 
     /**
      * Inject the Validator instance
      *
-     * @param Illuminate\Validation\Factory $validator
+     * @param \Illuminate\Validation\Factory $validator
      */
     public function __construct(Factory $validator)
     {
@@ -82,7 +82,7 @@ abstract class AbstractValidator
     /**
      * Return errors
      *
-     * @return Illuminate\Support\MessageBag
+     * @return \Illuminate\Support\MessageBag
      */
     public function getErrors()
     {
