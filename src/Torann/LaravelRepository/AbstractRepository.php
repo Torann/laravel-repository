@@ -337,7 +337,7 @@ abstract class AbstractRepository
      *
      * @return object[]
      */
-    public function paginate($perPage = 10)
+    public function paginate($perPage = 15)
     {
         $this->paginate = $perPage === false ? false : (int) $perPage;
 
