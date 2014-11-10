@@ -416,7 +416,7 @@ abstract class AbstractRepository
 
         // Update entity
         if ($entity) {
-            $entity->update($params);
+            $this->update($entity, $params);
         }
         // Create new entity
         else {
