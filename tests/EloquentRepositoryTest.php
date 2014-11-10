@@ -213,14 +213,18 @@ class EloquentRepositoryTest extends PHPUnit_Framework_TestCase
     {
         list($model, $validator, $repo) = $this->make();
 
-        $result = m::mock();
-        $result->shouldReceive('update')->once()->with(['id' => 'foo', 'email' => 'bar@foo.com'])->andReturn(m::self());
+        $mockModel = $this->makeMockModel()->makePartial();
+        $mockModel->id = 'foo';
+        $mockModel->exists = true;
 
         $query = $this->makeMockQuery();
         $query->shouldReceive('where')->with('email', '=', 'bar@foo.com')->once()->andReturn(m::self());
-        $query->shouldReceive('first')->once()->andReturn($result);
+        $query->shouldReceive('first')->once()->andReturn($mockModel);
 
         $model->shouldReceive('newQuery')->once()->andReturn($query);
+
+        $validator->shouldReceive('validate')->once()->with('update', ['id' => 'foo', 'email' => 'bar@foo.com'])->andReturn(false);
+        $validator->shouldReceive('getErrors')->once()->andReturn([]);
 
         $repo->updateOrCreate('email', ['id' => 'foo', 'email' => 'bar@foo.com']);
     }
