@@ -251,9 +251,10 @@ abstract class AbstractRepository
      * Creates a \Illuminate\Support\MessageBag object, add the error message
      * to it and then set the errors attribute of the user with that bag.
      *
-     * @param Model  $user
+     * @param object $model
      * @param string $errorMsg The error message.
      * @param string $key      The key if the error message.
+     * @param array  $values
      */
     public function attachErrorMsg($model, $errorMsg, $key, array $values = array())
     {
