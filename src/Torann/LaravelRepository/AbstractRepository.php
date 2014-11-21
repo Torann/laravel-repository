@@ -327,7 +327,15 @@ abstract class AbstractRepository
             $query->remember($this->cacheMinutes, $this->cacheKey);
         }
 
-        return $query->paginate($this->paginate);
+        // Paginate entries
+        $entries = $query->paginate($this->paginate);
+
+        // Append search parameters
+        if (isset($this->search)) {
+            $entries->appends(array_filter($this->search));
+        }
+
+        return $entries;
     }
 
     /**
