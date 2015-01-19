@@ -28,7 +28,7 @@ You'll then need to run `composer install` to download it and have the autoloade
 
 ## Documentation
 
-[View the official documentation](https://github.com/Torann/laravel-repository/wiki).
+[View the official documentation](http://lyften.com/projects/laravel-repository/).
 
 ## Todo's
 
