@@ -3,6 +3,8 @@
 use Lang;
 use Illuminate\Support\MessageBag;
 
+use BadMethodCallException;
+
 abstract class AbstractRepository
 {
     /**
@@ -117,7 +119,7 @@ abstract class AbstractRepository
         $perform = 'perform' . ucfirst($action);
 
         if (! method_exists($this, $perform)) {
-            throw new \BadMethodCallException("Method $perform does not exist on this class");
+            throw new BadMethodCallException("Method $perform does not exist on this class");
         }
 
         // Validate data

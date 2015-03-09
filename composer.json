@@ -11,20 +11,20 @@
      ],
     "require": {
         "php": ">=5.4.0",
-        "illuminate/support": "~4.2",
-        "illuminate/database": "~4.2"
+        "illuminate/support": "~5.0",
+        "illuminate/database": "~5.0"
     },
     "require-dev": {
         "mockery/mockery": "0.9.*"
     },
     "autoload": {
-        "psr-0": {
-            "Torann\\LaravelRepository": "src/"
+        "psr-4": {
+          "Torann\\LaravelRepository\\": "src/Torann/LaravelRepository"
         }
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.1-dev"
+            "dev-master": "0.2-dev"
         }
     },
     "minimum-stability": "stable"

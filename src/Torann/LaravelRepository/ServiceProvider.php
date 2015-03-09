@@ -18,19 +18,22 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
      */
     public function boot()
     {
-        // Register the package namespace
-        $this->package('torann/laravel-repository');
+        $this->publishes([
+            __DIR__.'/../../config/repositories.php' => config_path('repositories.php'),
+        ]);
 
         // Get config
-        $config = $this->app->config->get('laravel-repository::config', array());
+        $config = $this->app->config->get('repositories', array());
 
         // Are reserved names enabled
-        if ( !empty($config['reserved_names'])) {
+        if (array_get($config, 'reserved_names'))
+        {
             $this->setNameValidator($config['reserved_names']);
         }
 
         // Is the honeypot enabled?
-        if ($config['enable_honeypot'] == true) {
+        if (array_get($config, 'enable_honeypot', false) === true)
+        {
             $this->setHoneypotValidator();
         }
     }
