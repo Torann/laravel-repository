@@ -11,7 +11,7 @@ return array(
     |
     */
 
-    'enable_honeypot' => true,
+    'enable_honeypot' => false,
 
     /*
     |--------------------------------------------------------------------------
