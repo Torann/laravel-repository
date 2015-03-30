@@ -18,6 +18,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
      */
     public function boot()
     {
+        // Load helpers
+        include __DIR__.'/../helpers.php';
+
         $this->publishes([
             __DIR__.'/../../config/repositories.php' => config_path('repositories.php'),
         ]);
@@ -71,38 +74,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             'Torann\LaravelRepository\Extenders\HoneypotValidator@validate',
             $this->app->translator->get('validation.honeypot')
         );
-
-        // Add a custom honeypot macro to Laravel's forms
-        $this->app->form->macro('honeypot', function($honey_name)
-        {
-            // Create element ID
-            $honey_id = $this->slugify($honey_name);
-
-            return "<div id=\"{$honey_id}_wrap\" style=\"display:none;\">\n<input id=\"{$honey_id}\" name=\"{$honey_name}\" type=\"text\" value=\"\">\n</div>";
-        });
     }
 
-    /**
-     * Create an ID for the honeypot HTML element
-     *
-     * @param  string $text
-     * @return string
-     */
-    public function slugify($text)
-    {
-        // replace non letter or digits by _
-        $text = preg_replace('~[^\\pL\d]+~u', '_', $text);
-
-        // trim
-        $text = trim($text, '_');
-
-        // lowercase
-        $text = strtolower($text);
-
-        // remove unwanted characters
-        $text = preg_replace('~[^-\w]+~', '', $text);
-
-        // return lowercase
-        return $text;
-    }
 }
