@@ -1,4 +1,6 @@
-<?php namespace Torann\LaravelRepository;
+<?php
+
+namespace Torann\LaravelRepository;
 
 use Torann\LaravelRepository\Extenders\NameValidator;
 
@@ -9,7 +11,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
      *
      * @return void
      */
-    public function register() {}
+    public function register() {
+        //
+    }
 
     /**
      * Boot
@@ -29,14 +33,12 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         $config = $this->app->config->get('repositories', array());
 
         // Are reserved names enabled
-        if (array_get($config, 'reserved_names'))
-        {
+        if (array_get($config, 'reserved_names')) {
             $this->setNameValidator($config['reserved_names']);
         }
 
         // Is the honeypot enabled?
-        if (array_get($config, 'enable_honeypot', false) === true)
-        {
+        if (array_get($config, 'enable_honeypot', false) === true) {
             $this->setHoneypotValidator();
         }
     }
@@ -75,5 +77,4 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             $this->app->translator->get('validation.honeypot')
         );
     }
-
 }

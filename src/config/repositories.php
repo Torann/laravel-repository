@@ -25,6 +25,4 @@ return array(
     */
 
     'reserved_names' => array('administrator'),
-
 );
-

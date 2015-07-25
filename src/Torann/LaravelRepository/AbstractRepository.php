@@ -1,4 +1,6 @@
-<?php namespace Torann\LaravelRepository;
+<?php
+
+namespace Torann\LaravelRepository;
 
 use Lang;
 use Illuminate\Support\MessageBag;
@@ -219,6 +221,7 @@ abstract class AbstractRepository
         }
 
         $this->errors = $this->validator->getErrors();
+
         return false;
     }
 
@@ -466,8 +469,7 @@ abstract class AbstractRepository
         $entries = $this->fetchMany($query);
 
         // Delete them!
-        foreach ($entries as $entity)
-        {
+        foreach ($entries as $entity) {
             $this->delete($entity);
         }
 

@@ -1,7 +1,9 @@
-<?php namespace Torann\LaravelRepository\Extenders;
+<?php
 
-class HoneypotValidator {
+namespace Torann\LaravelRepository\Extenders;
 
+class HoneypotValidator
+{
     /**
      * Validate honeypot
      *

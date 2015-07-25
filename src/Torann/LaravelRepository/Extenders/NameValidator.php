@@ -1,4 +1,6 @@
-<?php namespace Torann\LaravelRepository\Extenders;
+<?php
+
+namespace Torann\LaravelRepository\Extenders;
 
 use Illuminate\Validation\Validator;
 
@@ -31,11 +33,6 @@ class NameValidator extends Validator
      */
     public function validateName($attribute, $value, $parameters)
     {
-        if(in_array($value, $this->reserved))
-        {
-            return false;
-        }
-
-        return true;
+        return in_array($value, $this->reserved) ? false : true;
     }
 }

@@ -1,4 +1,6 @@
-<?php namespace Torann\LaravelRepository;
+<?php
+
+namespace Torann\LaravelRepository;
 
 use Illuminate\Validation\Factory;
 
@@ -32,10 +34,8 @@ abstract class AbstractValidator
         {
             preg_match_all('/\{(.*?)\}/', $rule, $matches);
 
-            foreach($matches[0] as $key => $placeholder)
-            {
-                if(isset($data[$matches[1][$key]]))
-                {
+            foreach($matches[0] as $key => $placeholder) {
+                if(isset($data[$matches[1][$key]])) {
                     $rule = str_replace($placeholder, $data[$matches[1][$key]], $rule);
                 }
             }
@@ -88,5 +88,4 @@ abstract class AbstractValidator
     {
         return $this->errors;
     }
-
 }

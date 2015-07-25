@@ -1,4 +1,6 @@
-<?php namespace Torann\LaravelRepository;
+<?php
+
+namespace Torann\LaravelRepository;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -139,8 +141,7 @@ abstract class EloquentRepository extends AbstractRepository
             {
                 $value = '%'.str_replace(' ', '%', $search).'%';
 
-                foreach ($columns as $column)
-                {
+                foreach ($columns as $column) {
                     $query->orWhere($column, 'like', $value);
                 }
             });
