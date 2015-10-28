@@ -143,6 +143,37 @@ Create your repositories easily through the generator.
 
 You must first configure the storage location of the repository files. By default is the "app" folder and the namespace "App".
 
+##### Command `make:repository`
+
+To generate a repository for your User model, use the following command
+
+```
+php artisan make:repository User
+```
+
+Use a different model from the repository
+
+```
+php artisan make:repository User --model=SystemUser
+```
+
+> This command will create the new repository inside the repository folder set in the config file (default "App/Repositories").
+
+##### Command `make:criteria`
+
+To generate criteria use the following command
+
+```
+php artisan make:criteria SystemAdmin
+```
+
+Use a different model from the repository
+
+```
+php artisan make:criteria SystemAdmin --model=SystemUser
+```
+
+> This command will create the new criteria inside the criteria folder set in the config file (default "App/Repositories/Criteria").
 
 ### Use methods
 
