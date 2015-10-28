@@ -36,7 +36,7 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        dd('register: Torann\LaravelRepository\Providers\EventServiceProvider');
+        //dd('register: Torann\LaravelRepository\Providers\EventServiceProvider');
 
         $this->commands('Torann\LaravelRepository\Console\Commands\MakeRepositoryCommand');
         $this->commands('Torann\LaravelRepository\Console\Commands\MakeCriteriaCommand');
