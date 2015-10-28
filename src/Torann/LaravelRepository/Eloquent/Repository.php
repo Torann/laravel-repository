@@ -65,6 +65,26 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     }
 
     /**
+     * Gets repository model.
+     *
+     * @return Model
+     */
+    public function getModel()
+    {
+        return $this->model;
+    }
+
+    /**
+     * Sets repository model.
+     *
+     * @param Model $model
+     */
+    public function setModel(Model $model)
+    {
+        $this->model = $model;
+    }
+
+    /**
      * @param array $columns
      * @return mixed
      */
@@ -93,7 +113,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     }
 
     /**
-     * @param int $perPage
+     * @param int   $perPage
      * @param array $columns
      * @return mixed
      */
@@ -114,7 +134,9 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     {
         $model = $this->model->create($data);
 
-        if ($model) event(new RepositoryEntityEvent('create', $this));
+        if ($model) {
+            event(new RepositoryEntityEvent('create', $this));
+        }
 
         return $model;
     }
@@ -130,7 +152,9 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     {
         $result = $entity->update($data);
 
-        if ($result) event(new RepositoryEntityEvent('update', $this));
+        if ($result) {
+            event(new RepositoryEntityEvent('update', $this));
+        }
 
         return $result;
     }
@@ -146,7 +170,9 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     {
         $result = $entity->delete();
 
-        if ($result) event(new RepositoryEntityEvent('delete', $this));
+        if ($result) {
+            event(new RepositoryEntityEvent('delete', $this));
+        }
 
         return $result;
     }
@@ -190,41 +216,25 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     }
 
     /**
-     * Find a collection of models by the given query conditions.
+     * Find data by multiple fields
      *
      * @param array $where
      * @param array $columns
-     * @param bool $or
-     *
-     * @return \Illuminate\Database\Eloquent\Collection|null
+     * @return mixed
      */
-    public function findWhere(array $where, $columns = ['*'], $or = false)
+    public function findWhere(array $where, $columns = ['*'])
     {
         $this->applyCriteria();
 
         $model = $this->model;
 
         foreach ($where as $field => $value) {
-            if ($value instanceof \Closure) {
-                $model = (!$or)
-                    ? $model->where($value)
-                    : $model->orWhere($value);
-            } elseif (is_array($value)) {
-                if (count($value) === 3) {
-                    list($field, $operator, $search) = $value;
-                    $model = (!$or)
-                        ? $model->where($field, $operator, $search)
-                        : $model->orWhere($field, $operator, $search);
-                } elseif (count($value) === 2) {
-                    list($field, $search) = $value;
-                    $model = (!$or)
-                        ? $model->where($field, '=', $search)
-                        : $model->orWhere($field, '=', $search);
-                }
-            } else {
-                $model = (!$or)
-                    ? $model->where($field, '=', $value)
-                    : $model->orWhere($field, '=', $value);
+            if (is_array($value)) {
+                list($field, $condition, $val) = $value;
+                $model = $model->where($field, $condition, $val);
+            }
+            else {
+                $model = $model->where($field, '=', $value);
             }
         }
 
@@ -239,8 +249,9 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     {
         $model = app($this->model());
 
-        if (!$model instanceof Model)
+        if (!$model instanceof Model) {
             throw new RepositoryException("Class {$this->model()} must be an instance of Illuminate\\Database\\Eloquent\\Model");
+        }
 
         return $this->model = $model;
     }
