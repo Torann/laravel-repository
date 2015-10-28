@@ -93,13 +93,13 @@ The following methods are available:
 Create your model normally, but it is important to define the attributes that can be filled from the input form data.
 
 ```php
-<?php 
+<?php
 
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model 
+class User extends Model
 {
     protected $fillable = [
         'title',
@@ -114,21 +114,21 @@ class User extends Model
 ### Create a Repository
 
 ```php
-<?php 
+<?php
 
 namespace App\Repositories;
 
 use Torann\LaravelRepository\Eloquent\Repository;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 
-class UsersRepository extends Repository 
+class UsersRepository extends Repository
 {
     /**
      * Specify Model class name
      *
      * @return string
      */
-    public function model() 
+    public function model()
     {
         return 'App\User';
     }
@@ -178,20 +178,20 @@ php artisan make:criteria SystemAdmin --model=SystemUser
 ### Use methods
 
 ```php
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
 use App\Repositories\UsersRepository;
 
-class UsersController extends Controller 
+class UsersController extends Controller
 {
     /**
      * @var PostRepository
      */
     protected $repository;
 
-    public function __construct(UsersRepository $repository) 
+    public function __construct(UsersRepository $repository)
     {
         $this->repository = $repository;
     }
@@ -262,14 +262,14 @@ $this->repository->delete($id)
 Criteria are a way to change the repository of the query by applying specific conditions according to your needs. You can add multiple Criteria in your repository.
 
 ```php
-<?php 
+<?php
 
 namespace App\Repositories\Criteria\Users;
 
-use Torann\LaravelRepository\Criteria\Criteria;
+use Torann\LaravelRepository\Criteria\AbstractCriteria;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 
-class MyCriteria extends Criteria 
+class MyCriteria extends AbstractCriteria
 {
     /**
      * @param $model
@@ -279,7 +279,7 @@ class MyCriteria extends Criteria
     public function apply($model, RepositoryInterface $repository)
     {
         $model = $model->where('is_admin', true);
-        
+
         return $model;
     }
 }
@@ -288,29 +288,29 @@ class MyCriteria extends Criteria
 ### Using the Criteria in a Controller
 
 ```php
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
 use App\Repositories\UsersRepository;
 use App\Repositories\Criteria\Users\MyCriteria;
 
-class UsersController extends Controller 
+class UsersController extends Controller
 {
     /**
      * @var PostRepository
      */
     protected $repository;
 
-    public function __construct(UsersRepository $repository) 
+    public function __construct(UsersRepository $repository)
     {
         $this->repository = $repository;
     }
 
-    public function index() 
+    public function index()
     {
         $this->film->pushCriteria(new MyCriteria());
-        
+
         return \Response::json($this->film->all());
     }
 }
@@ -321,7 +321,7 @@ Setting the default Criteria in Repository
 ```php
 use Torann\LaravelRepository\Eloquent\Repository;
 
-class PostRepository extends Repository 
+class PostRepository extends Repository
 {
     public function boot()
     {
@@ -329,7 +329,7 @@ class PostRepository extends Repository
         $this->pushCriteria(new AnotherCriteria());
         ...
     }
-    
+
     function model()
     {
        return "App\\Post";
@@ -356,10 +356,10 @@ use Torann\LaravelRepository\Eloquent\Repository;
 use Torann\LaravelRepository\Traits\CacheableRepository;
 use Torann\LaravelRepository\Contracts\CacheableInterface;
 
-class PostRepository extends Repository implements CacheableInterface 
+class PostRepository extends Repository implements CacheableInterface
 {
     use CacheableRepository;
-    
+
     ...
 }
 ```
@@ -377,7 +377,7 @@ use Torann\LaravelRepository\Eloquent\Repository;
 use Torann\LaravelRepository\Contracts\CacheableInterface;
 use Torann\LaravelRepository\Traits\CacheableRepository;
 
-class PostRepository extends Repository implements CacheableInterface 
+class PostRepository extends Repository implements CacheableInterface
 {
     use CacheableRepository;
 
@@ -387,16 +387,16 @@ class PostRepository extends Repository implements CacheableInterface
      * @var int
      */
     protected $cacheMinutes = 90;
-    
+
     /**
      * Method to include in caching.
      *
      * @var array
      */
     protected $cacheOnly = ['all', ...];
-    
+
     // OR
-    
+
     /**
      * Method to exclude from caching.
      *
