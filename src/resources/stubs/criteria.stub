@@ -1,0 +1,20 @@
+<?php
+
+namespace criteria_namespace;
+
+use Torann\LaravelRepository\Criteria\Criteria;
+use Torann\LaravelRepository\Contracts\RepositoryInterface;
+
+class criteria_class extends Criteria
+{
+    /**
+     * @param $model
+     * @param RepositoryInterface $repository
+     *
+     * @return mixed
+     */
+    public function apply($model, RepositoryInterface $repository)
+    {
+        return $model;
+    }
+}

@@ -1,0 +1,17 @@
+<?php
+
+namespace repository_namespace;
+
+use Torann\LaravelRepository\Contracts\RepositoryInterface;
+use Torann\LaravelRepository\Eloquent\Repository;
+
+class repository_class extends Repository
+{
+    /**
+     * @return string
+     */
+    public function model()
+    {
+        return 'model_path\model_name';
+    }
+}
