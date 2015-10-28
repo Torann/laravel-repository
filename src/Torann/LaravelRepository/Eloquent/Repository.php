@@ -3,7 +3,7 @@
 namespace Torann\LaravelRepository\Eloquent;
 
 use Torann\LaravelRepository\Contracts\CriteriaInterface;
-use Torann\LaravelRepository\Criteria\Criteria;
+use Torann\LaravelRepository\Criteria\AbstractCriteria;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 use Torann\LaravelRepository\Events\RepositoryEntityEvent;
@@ -28,6 +28,13 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     protected $criteria;
 
     /**
+     * Global query scope.
+     *
+     * @var \Closure
+     */
+    protected $scopeQuery = null;
+
+    /**
      * Skip set criteria.
      *
      * @var bool
@@ -44,7 +51,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     {
         $this->criteria = $collection;
 
-        $this->resetScope();
+        $this->resetCriteria();
         $this->makeModel();
         $this->boot();
     }
@@ -90,6 +97,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function all($columns = ['*'])
     {
+        $this->applyScope();
         $this->applyCriteria();
 
         return $this->model->get($columns);
@@ -102,7 +110,9 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function lists($value, $key = null)
     {
+        $this->applyScope();
         $this->applyCriteria();
+
         $lists = $this->model->lists($value, $key);
 
         if (is_array($lists)) {
@@ -117,8 +127,9 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      * @param array $columns
      * @return mixed
      */
-    public function paginate($perPage = 1, $columns = ['*'])
+    public function paginate($perPage = 15, $columns = ['*'])
     {
+        $this->applyScope();
         $this->applyCriteria();
 
         return $this->model->paginate($perPage, $columns);
@@ -184,6 +195,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function find($id, $columns = ['*'])
     {
+        $this->applyScope();
         $this->applyCriteria();
 
         return $this->model->find($id, $columns);
@@ -197,6 +209,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function findBy($attribute, $value, $columns = ['*'])
     {
+        $this->applyScope();
         $this->applyCriteria();
 
         return $this->model->where($attribute, '=', $value)->first($columns);
@@ -210,6 +223,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function findAllBy($attribute, $value, $columns = ['*'])
     {
+        $this->applyScope();
         $this->applyCriteria();
 
         return $this->model->where($attribute, '=', $value)->get($columns);
@@ -224,6 +238,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function findWhere(array $where, $columns = ['*'])
     {
+        $this->applyScope();
         $this->applyCriteria();
 
         $model = $this->model;
@@ -257,11 +272,69 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     }
 
     /**
+     * Query Scope
+     *
+     * @param \Closure $scope
      * @return $this
      */
-    public function resetScope()
+    public function scopeQuery(\Closure $scope)
+    {
+        $this->scopeQuery = $scope;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function resetCriteria()
     {
         $this->skipCriteria(false);
+
+        return $this;
+    }
+
+    /**
+     * Apply scope in current Query
+     *
+     * @return $this
+     */
+    protected function applyScope()
+    {
+        if (is_callable($this->scopeQuery)) {
+            $callback = $this->scopeQuery;
+            $this->model = $callback($this->model);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param AbstractCriteria $criteria
+     * @return $this
+     */
+    public function pushCriteria(AbstractCriteria $criteria)
+    {
+        $this->criteria->push($criteria);
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCriteria()
+    {
+        return $this->criteria;
+    }
+
+    /**
+     * @param AbstractCriteria $criteria
+     * @return $this
+     */
+    public function getByCriteria(AbstractCriteria $criteria)
+    {
+        $this->model = $criteria->apply($this->model, $this);
 
         return $this;
     }
@@ -278,36 +351,6 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     }
 
     /**
-     * @return mixed
-     */
-    public function getCriteria()
-    {
-        return $this->criteria;
-    }
-
-    /**
-     * @param Criteria $criteria
-     * @return $this
-     */
-    public function getByCriteria(Criteria $criteria)
-    {
-        $this->model = $criteria->apply($this->model, $this);
-
-        return $this;
-    }
-
-    /**
-     * @param Criteria $criteria
-     * @return $this
-     */
-    public function pushCriteria(Criteria $criteria)
-    {
-        $this->criteria->push($criteria);
-
-        return $this;
-    }
-
-    /**
      * @return $this
      */
     public function applyCriteria()
@@ -317,7 +360,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
         }
 
         foreach ($this->getCriteria() as $criteria) {
-            if ($criteria instanceof Criteria) {
+            if ($criteria instanceof AbstractCriteria) {
                 $this->model = $criteria->apply($this->model, $this);
             }
         }

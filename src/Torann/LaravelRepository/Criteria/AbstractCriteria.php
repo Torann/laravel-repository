@@ -4,7 +4,7 @@ namespace Torann\LaravelRepository\Criteria;
 
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 
-abstract class Criteria
+abstract class AbstractCriteria
 {
     /**
      * @param $model

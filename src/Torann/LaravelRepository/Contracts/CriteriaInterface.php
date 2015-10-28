@@ -2,7 +2,7 @@
 
 namespace Torann\LaravelRepository\Contracts;
 
-use Torann\LaravelRepository\Criteria\Criteria;
+use Torann\LaravelRepository\Criteria\AbstractCriteria;
 
 interface CriteriaInterface
 {
@@ -18,16 +18,16 @@ interface CriteriaInterface
     public function getCriteria();
 
     /**
-     * @param Criteria $criteria
+     * @param AbstractCriteria $criteria
      * @return $this
      */
-    public function getByCriteria(Criteria $criteria);
+    public function getByCriteria(AbstractCriteria $criteria);
 
     /**
-     * @param Criteria $criteria
+     * @param AbstractCriteria $criteria
      * @return $this
      */
-    public function pushCriteria(Criteria $criteria);
+    public function pushCriteria(AbstractCriteria $criteria);
 
     /**
      * @return $this

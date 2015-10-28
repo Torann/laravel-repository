@@ -2,10 +2,10 @@
 
 namespace criteria_namespace;
 
-use Torann\LaravelRepository\Criteria\Criteria;
+use Torann\LaravelRepository\Criteria\AbstractCriteria;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 
-class criteria_class extends Criteria
+class criteria_class extends AbstractCriteria
 {
     /**
      * @param $model
