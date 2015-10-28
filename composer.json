@@ -1,31 +1,34 @@
 {
-    "name": "torann/laravel-repository",
-    "description": "Base repository implementation for Laravel",
-    "keywords": ["laravel", "repository", "repository pattern", "eloquent", "repositories"],
-    "license": "BSD 2-Clause",
-    "authors": [
-        {
-            "name": "Daniel Stainback",
-            "email": "daniel@lyften.com"
-        }
-     ],
-    "require": {
-        "php": ">=5.4.0",
-        "illuminate/support": "~4.2",
-        "illuminate/database": "~4.2"
+  "name": "torann/laravel-repository",
+  "description": "Base repository implementation for Laravel",
+  "keywords": ["laravel", "repository", "repository pattern", "eloquent", "repositories"],
+  "license": "BSD 2-Clause",
+  "authors": [
+    {
+      "name": "Daniel Stainback",
+      "email": "daniel@lyften.com"
     },
-    "require-dev": {
-        "mockery/mockery": "0.9.*"
-    },
-    "autoload": {
-        "psr-0": {
-            "Torann\\LaravelRepository": "src/"
-        }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "0.1-dev"
-        }
-    },
-    "minimum-stability": "stable"
+    {
+      "name": "Anderson Andrade",
+      "email": "contato@andersonandra.de"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "illuminate/support": "~5.1",
+    "illuminate/database": "~5.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^4.8"
+  },
+  "autoload": {
+    "psr-4": {
+      "Torann\\LaravelRepository\\": "src/Torann/LaravelRepository"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.2-dev"
+    }
+  }
 }
