@@ -3,7 +3,6 @@
 namespace Torann\LaravelRepository\Traits;
 
 use Closure;
-use Torann\LaravelRepository\Criteria\Criteria;
 
 trait CacheableRepository
 {
