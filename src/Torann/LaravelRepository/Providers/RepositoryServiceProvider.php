@@ -11,7 +11,7 @@ class RepositoryServiceProvider extends ServiceProvider
      *
      * @var bool
      */
-    protected $defer = true;
+    protected $defer = false;
 
     /**
      * Register any other events for your application.
@@ -36,8 +36,6 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //dd('register: Torann\LaravelRepository\Providers\EventServiceProvider');
-
         $this->commands('Torann\LaravelRepository\Console\Commands\MakeRepositoryCommand');
         $this->commands('Torann\LaravelRepository\Console\Commands\MakeCriteriaCommand');
         $this->app->register('Torann\LaravelRepository\Providers\EventServiceProvider');
