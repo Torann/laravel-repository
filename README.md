@@ -345,6 +345,10 @@ Use `skipCriteria` before any other chaining method
 $posts = $this->repository->skipCriteria()->all();
 ```
 
+### Cache
+
+Add a layer of cache easily to your repository
+
 #### Cache Usage
 
 > **Note**: Caching uses [Cache Tags](http://laravel.com/docs/5.1/cache#cache-tags), so caching is not supported when using the `file` or `database` cache drivers.
