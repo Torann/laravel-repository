@@ -299,12 +299,12 @@ abstract class Repository implements RepositoryInterface
     }
 
     /**
-     * Query Scope
+     * Add query scope.
      *
      * @param \Closure $scope
      * @return $this
      */
-    public function scopeQuery(\Closure $scope)
+    public function addScopeQuery(\Closure $scope)
     {
         $this->scopeQuery[] = $scope;
 
@@ -326,6 +326,23 @@ abstract class Repository implements RepositoryInterface
 
         // Clear scopes
         $this->scopeQuery = [];
+
+        return $this;
+    }
+
+    /**
+     * Handle dynamic static method calls into the method.
+     *
+     * @param  string $method
+     * @param  array  $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters)
+    {
+        // Check for scope method and call
+        if (method_exists($this, $scope = 'scope'.ucfirst($method))) {
+            return call_user_func_array([$this, $scope], $parameters) ?: $this;
+        }
 
         return $this;
     }

@@ -250,9 +250,9 @@ class UsersRepository extends Repository
      *
      * @return self
      */
-    public function authorsOnly()
+    public function scopeAuthorsOnly()
     {
-        return $this->scopeQuery(function($query) {
+        return $this->addScopeQuery(function($query) {
             return $query->where('is_author', '=', true);
         });
     }

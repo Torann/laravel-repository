@@ -119,10 +119,10 @@ interface RepositoryInterface
     public function makeModel();
 
     /**
-     * Query Scope
+     * Add query scope.
      *
      * @param \Closure $scope
      * @return $this
      */
-    public function scopeQuery(\Closure $scope);
+    public function addScopeQuery(\Closure $scope);
 }

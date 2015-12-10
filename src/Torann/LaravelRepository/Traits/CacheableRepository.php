@@ -149,6 +149,6 @@ trait CacheableRepository
             return $this->getCache(lcfirst(substr($method, 6)), $args);
         }
 
-        return call_user_func_array([$this, $method], $args);
+        return parent::__call($method, $args);
     }
 }
