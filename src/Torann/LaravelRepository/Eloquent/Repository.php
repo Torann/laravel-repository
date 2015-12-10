@@ -216,8 +216,8 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     }
 
     /**
-     * @param       $attribute
-     * @param       $value
+     * @param mixed $attribute
+     * @param mixed $value
      * @param array $columns
      * @return mixed
      */
@@ -225,6 +225,11 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     {
         $this->applyScope();
         $this->applyCriteria();
+
+        // Perform where in
+        if (is_array($value)) {
+            return $this->model->whereIn($attribute, $value)->get($columns);
+        }
 
         return $this->model->where($attribute, '=', $value)->get($columns);
     }
