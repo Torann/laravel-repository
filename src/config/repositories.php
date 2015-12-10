@@ -4,59 +4,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Repository namespace
+    | Repository pagination
     |--------------------------------------------------------------------------
-    |
-    | The namespace for the repository classes.
     |
     */
 
-    'repository_namespace' => 'App\Repositories',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Repository path
-    |--------------------------------------------------------------------------
-    |
-    | The path to the repository folder.
-    |
-    */
-
-    'repository_path' => app_path('Repositories'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Criteria namespace
-    |--------------------------------------------------------------------------
-    |
-    | The namespace for the criteria classes.
-    |
-    */
-
-    'criteria_namespace' => 'App\Repositories\Criteria',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Criteria path
-    |--------------------------------------------------------------------------
-    |
-    | The path to the criteria folder.
-    |
-    */
-
-    'criteria_path'=> app_path('Repositories/Criteria'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Model namespace
-    |--------------------------------------------------------------------------
-    |
-    | The model namespace.
-    |
-    */
-
-    'model_namespace' => 'App',
-
+    'pagination' => [
+        'limit' => 15
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -141,26 +96,5 @@ return [
 
             'skipCache' => 'skipCache'
         ],
-
-        /*
-        |--------------------------------------------------------------------------
-        | Methods Allowed
-        |--------------------------------------------------------------------------
-        |
-        | methods cacheable : all, paginate, find, findByField, findWhere, getByCriteria
-        |
-        | Ex:
-        |
-        | 'only'  =>['all','paginate'],
-        |
-        | or
-        |
-        | 'except'  =>['find'],
-        */
-
-        'allowed' => [
-            'only' => null,
-            'except' => null
-        ]
     ],
 ];

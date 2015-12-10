@@ -2,15 +2,13 @@
 
 namespace Torann\LaravelRepository\Traits;
 
-use Closure;
-
 trait CacheableRepository
 {
     /**
      * Skip Cache
      *
      * @param bool $status
-     * @return $this
+     * @return self
      */
     public function skipCache($status = true)
     {
@@ -20,6 +18,8 @@ trait CacheableRepository
     }
 
     /**
+     * Determine if the cache will be skipped
+     *
      * @return bool
      */
     public function isSkippedCache()
@@ -33,7 +33,7 @@ trait CacheableRepository
         $skipped = isset($this->cacheSkip) ? $this->cacheSkip : false;
 
         // Check request for cache override
-        if (app('Illuminate\Http\Request')->get(config('repositories.cache.params.skipCache', 'skipCache'))) {
+        if (request(config('repositories.cache.params.skipCache', 'skipCache'))) {
             $skipped = true;
         }
 
@@ -46,14 +46,15 @@ trait CacheableRepository
      */
     protected function allowedCache($method)
     {
-        $cacheEnabled = config('repositories.cache.enabled', true);
+        $cacheEnabled = config('repositories.cache.enabled', false);
 
         if (! $cacheEnabled) {
             return false;
         }
 
         $cacheOnly = isset($this->cacheOnly) ? $this->cacheOnly : config('repositories.cache.allowed.only', null);
-        $cacheExcept = isset($this->cacheExcept) ? $this->cacheExcept : config('repositories.cache.allowed.except', null);
+        $cacheExcept = isset($this->cacheExcept) ? $this->cacheExcept : config('repositories.cache.allowed.except',
+            null);
 
         if (is_array($cacheOnly)) {
             return isset($cacheOnly[$method]);
@@ -71,23 +72,6 @@ trait CacheableRepository
     }
 
     /**
-     * Get an item from the cache, or store the default value.
-     *
-     * @param  string $method
-     * @param  array|null $args
-     * @param  \Closure $callback
-     * @return mixed
-     */
-    public function getCache($method, $args = null, Closure $callback)
-    {
-        return app('Illuminate\Cache\CacheManager')->tags(get_called_class())->remember(
-            $this->getCacheKey($method, $args),
-            $this->getCacheMinutes(),
-            $callback
-        );
-    }
-
-    /**
      * Get Cache key for the method
      *
      * @param $method
@@ -101,7 +85,7 @@ trait CacheableRepository
         return sprintf('%s@%s-%s',
             get_called_class(),
             $method,
-            md5($args)
+            md5($args) // TODO: Add `scopeQuery` and `with` arrays
         );
     }
 
@@ -116,123 +100,55 @@ trait CacheableRepository
     }
 
     /**
-     * Retrieve all data of repository
-     *
-     * @param array $columns
-     * @return mixed
-     */
-    public function all($columns = ['*'])
-    {
-        if (!$this->allowedCache('all') || $this->isSkippedCache()) {
-            return parent::all($columns);
-        }
-
-        return $this->getCache('all', func_get_args(), function () use ($columns) {
-            return parent::all($columns);
-        });
-    }
-
-    /**
-     * @param  string $value
-     * @param  string $key
-     * @return array
-     */
-    public function lists($value, $key = null)
-    {
-        if (!$this->allowedCache('lists') || $this->isSkippedCache()) {
-            return parent::lists($value, $key);
-        }
-
-        return $this->getCache('lists', func_get_args(), function () use ($value, $key) {
-            return parent::lists($value, $key);
-        });
-    }
-
-    /**
-     * Retrieve all data of repository, paginated
-     * @param null  $limit
-     * @param array $columns
-     * @return mixed
-     */
-    public function paginate($limit = null, $columns = ['*'])
-    {
-        if (!$this->allowedCache('paginate') || $this->isSkippedCache()) {
-            return parent::paginate($limit, $columns);
-        }
-
-        return $this->getCache('paginate', func_get_args(), function () use ($limit, $columns) {
-            return parent::paginate($limit, $columns);
-        });
-    }
-
-    /**
-     * Find data by id
-     *
-     * @param       $id
-     * @param array $columns
-     * @return mixed
-     */
-    public function find($id, $columns = ['*'])
-    {
-        if (!$this->allowedCache('find') || $this->isSkippedCache()) {
-            return parent::find($id, $columns);
-        }
-
-        return $this->getCache('find', func_get_args(), function () use ($id, $columns) {
-            return parent::find($id, $columns);
-        });
-    }
-
-    /**
-     * @param       $attribute
-     * @param       $value
-     * @param array $columns
-     * @return mixed
-     */
-    public function findBy($attribute, $value, $columns = ['*'])
-    {
-        if (!$this->allowedCache('findBy') || $this->isSkippedCache()) {
-            return parent::findBy($attribute, $value, $columns);
-        }
-
-        return $this->getCache('findBy', func_get_args(), function () use ($attribute, $value, $columns) {
-            return parent::findBy($attribute, $value, $columns);
-        });
-    }
-
-    /**
-     * @param       $attribute
-     * @param       $value
-     * @param array $columns
-     * @return mixed
-     */
-    public function findAllBy($attribute, $value, $columns = ['*'])
-    {
-        if (!$this->allowedCache('findBy') || $this->isSkippedCache()) {
-            return parent::findAllBy($attribute, $value, $columns);
-        }
-
-        return $this->getCache('findBy', func_get_args(), function () use ($attribute, $value, $columns) {
-            return parent::findAllBy($attribute, $value, $columns);
-        });
-    }
-
-    /**
      * Find data by multiple fields
      *
-     * @param array $where
-     * @param array $columns
-     * @param bool  $or
+     * @param string $method
+     * @param array  $args
      * @return mixed
      */
-    public function findWhere(array $where, $columns = ['*'], $or = false)
+    public function getCache($method, $args = [])
     {
-        if (!$this->allowedCache('findWhere') || $this->isSkippedCache()) {
-            return parent::findWhere($where, $columns);
+        if (!$this->allowedCache($method) || $this->isSkippedCache()) {
+            return call_user_func_array([$this, $method], $args);
         }
 
-        return $this->getCache('findWhere', func_get_args(), function () use ($where, $columns) {
-            return parent::findWhere($where, $columns);
+        // Get cache manager
+        $cache = app('Illuminate\Cache\CacheManager');
+
+        // Set cache parameters
+        $key = $this->getCacheKey($method, $args);
+        $time = $this->getCacheMinutes();
+
+        return $cache->tags(get_called_class())->remember($key, $time, function () use ($method, $args) {
+            return call_user_func_array([$this, $method], $args);
         });
+    }
+
+//    /**
+//     * Retrieve all data of repository
+//     *
+//     * @param array $columns
+//     * @return mixed
+//     */
+//    public function all($columns = ['*'])
+//    {
+//        return $this->getCache('all', [$columns]);
+//    }
+
+    /**
+     * Handle dynamic static method calls into the method.
+     *
+     * @param  string $method
+     * @param  array  $args
+     * @return mixed
+     */
+    public function __call($method, $args)
+    {
+        // Call cached method
+        if (substr($method, 0, 6) === 'cached') {
+            return $this->getCache(lcfirst(substr($method, 6)), $args);
+        }
+
+        return call_user_func_array([$this, $method], $args);
     }
 }

@@ -1,16 +1,18 @@
 {
   "name": "torann/laravel-repository",
   "description": "Base repository implementation for Laravel",
-  "keywords": ["laravel", "repository", "repository pattern", "eloquent", "repositories"],
+  "keywords": [
+    "laravel",
+    "repository",
+    "repository pattern",
+    "eloquent",
+    "repositories"
+  ],
   "license": "BSD 2-Clause",
   "authors": [
     {
       "name": "Daniel Stainback",
       "email": "daniel@lyften.com"
-    },
-    {
-      "name": "Anderson Andrade",
-      "email": "contato@andersonandra.de"
     }
   ],
   "require": {
@@ -23,15 +25,6 @@
     "psr-4": {
       "Torann\\LaravelRepository\\": "src/Torann/LaravelRepository"
     }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Torann\\LaravelRepository\\": "tests/"
-    }
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^4.8",
-    "mockery/mockery": "^0.9.4"
   },
   "extra": {
     "branch-alias": {

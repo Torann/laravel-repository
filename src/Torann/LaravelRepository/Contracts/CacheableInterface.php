@@ -2,19 +2,16 @@
 
 namespace Torann\LaravelRepository\Contracts;
 
-use Closure;
-
 interface CacheableInterface
 {
     /**
-     * Get an item from the cache, or store the default value.
+     * Find data by multiple fields
      *
-     * @param  string $method
-     * @param  array|null $args
-     * @param  \Closure $callback
+     * @param string $method
+     * @param array $args
      * @return mixed
      */
-    public function getCache($method, $args = null, Closure $callback);
+    public function getCache($method, $args = []);
 
     /**
      * Get Cache key for the method

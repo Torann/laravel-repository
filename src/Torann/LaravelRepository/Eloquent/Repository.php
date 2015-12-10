@@ -2,66 +2,64 @@
 
 namespace Torann\LaravelRepository\Eloquent;
 
-use Torann\LaravelRepository\Contracts\CriteriaInterface;
-use Torann\LaravelRepository\Criteria\AbstractCriteria;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Database\Eloquent\Model;
+use Torann\LaravelRepository\Events\RepositoryEntityEvent;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
-use Torann\LaravelRepository\Events\RepositoryEntityEvent;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-
-abstract class Repository implements RepositoryInterface, CriteriaInterface
+abstract class Repository implements RepositoryInterface
 {
     /**
-     * Model instance
-     *
-     * @var
+     * @var \Illuminate\Database\Eloquent\Model
      */
-    protected $model;
+    protected $eloquentModel;
 
     /**
-     * Criteria to apply.
-     *
-     * @var Collection
+     * @var \Illuminate\Database\Eloquent\Builder
      */
-    protected $criteria;
+    protected $query;
 
     /**
      * Global query scope.
      *
-     * @var \Closure
+     * @var array
      */
-    protected $scopeQuery = null;
+    protected $scopeQuery = [];
 
     /**
-     * Skip set criteria.
+     * The relations to eager load on every query.
      *
-     * @var bool
+     * @var array
      */
-    protected $skipCriteria = false;
+    protected $with = [];
 
     /**
      * Create a new Repository instance
      *
-     * @param \Illuminate\Support\Collection $collection
      * @throws \Torann\LaravelRepository\Exceptions\RepositoryException
      */
-    public function __construct(Collection $collection)
+    public function __construct()
     {
-        $this->criteria = $collection;
-
-        $this->resetCriteria();
         $this->makeModel();
+        $this->scopeReset();
         $this->boot();
     }
 
     /**
-     * Specify Model class name
+     * Reset internal Query
      *
-     * @return string
+     * @return $this
      */
-    public abstract function model();
+    public function scopeReset()
+    {
+        $this->scopeQuery = [];
+
+        $this->query = $this->newQuery();
+
+        return $this;
+    }
 
     /**
      * The "booting" method of the repository.
@@ -72,150 +70,63 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
     }
 
     /**
-     * Gets repository model.
+     * Get a new entity instance
      *
-     * @return Model
+     * @param  array $attributes
+     * @return  \Illuminate\Database\Eloquent\Model
      */
-    public function getModel()
+    public function getNew(array $attributes = [])
     {
-        return $this->model;
+        return $this->eloquentModel->newInstance($attributes);
     }
 
     /**
-     * Sets repository model.
+     * Get a new query builder instance
      *
-     * @param Model $model
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function setModel(Model $model)
+    protected function newQuery()
     {
-        $this->model = $model;
-    }
+        $this->query = $this->getNew()->newQuery();
 
-    /**
-     * @param array $columns
-     * @return mixed
-     */
-    public function all($columns = ['*'])
-    {
+//        $this->applyEagerLoads();
         $this->applyScope();
-        $this->applyCriteria();
 
-        return $this->model->get($columns);
+        return $this;
     }
 
     /**
-     * @param  string $value
-     * @param  string $key
-     * @return array
-     */
-    public function lists($value, $key = null)
-    {
-        $this->applyScope();
-        $this->applyCriteria();
-
-        $lists = $this->model->lists($value, $key);
-
-        if (is_array($lists)) {
-            return $lists;
-        }
-
-        return $lists->all();
-    }
-
-    /**
-     * @param int   $perPage
-     * @param array $columns
-     * @return mixed
-     */
-    public function paginate($perPage = 15, $columns = ['*'])
-    {
-        $this->applyScope();
-        $this->applyCriteria();
-
-        return $this->model->paginate($perPage, $columns);
-    }
-
-    /**
-     * Create and persist a new entity with the given attributes
+     * Find data by id
      *
-     * @param array $data
-     * @return mixed
-     */
-    public function create(array $data)
-    {
-        $model = $this->model->create($data);
-
-        if ($model) {
-            event(new RepositoryEntityEvent('create', $this));
-        }
-
-        return $model;
-    }
-
-    /**
-     * Update an entity with the given attributes and persist it
-     *
-     * @param Model $entity
-     * @param array $data
-     * @return bool
-     */
-    public function update(Model $entity, array $data)
-    {
-        $result = $entity->update($data);
-
-        if ($result) {
-            event(new RepositoryEntityEvent('update', $this));
-        }
-
-        return $result;
-    }
-
-    /**
-     *
-     * Delete an entity.
-     *
-     * @param Model $entity
-     * @return bool
-     */
-    public function delete(Model $entity)
-    {
-        $result = $entity->delete();
-
-        if ($result) {
-            event(new RepositoryEntityEvent('delete', $this));
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param       $id
-     * @param array $columns
-     * @return mixed
+     * @param  mixed $id
+     * @param  array $columns
+     * @return Model|Collection
      */
     public function find($id, $columns = ['*'])
     {
-        $this->applyScope();
-        $this->applyCriteria();
+        $this->newQuery();
 
-        return $this->model->find($id, $columns);
+        return $this->query->find($id, $columns);
     }
 
     /**
-     * @param       $attribute
+     * Find data by field and value
+     *
+     * @param       $field
      * @param       $value
      * @param array $columns
-     * @return mixed
+     * @return Model|Collection
      */
-    public function findBy($attribute, $value, $columns = ['*'])
+    public function findBy($field, $value, $columns = ['*'])
     {
-        $this->applyScope();
-        $this->applyCriteria();
+        $this->newQuery();
 
-        return $this->model->where($attribute, '=', $value)->first($columns);
+        return $this->query->where($field, '=', $value)->first();
     }
 
     /**
+     * Find data by field
+     *
      * @param mixed $attribute
      * @param mixed $value
      * @param array $columns
@@ -223,15 +134,14 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function findAllBy($attribute, $value, $columns = ['*'])
     {
-        $this->applyScope();
-        $this->applyCriteria();
+        $this->newQuery();
 
         // Perform where in
         if (is_array($value)) {
-            return $this->model->whereIn($attribute, $value)->get($columns);
+            return $this->query->whereIn($attribute, $value)->get($columns);
         }
 
-        return $this->model->where($attribute, '=', $value)->get($columns);
+        return $this->query->where($attribute, '=', $value)->get($columns);
     }
 
     /**
@@ -243,22 +153,136 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function findWhere(array $where, $columns = ['*'])
     {
-        $this->applyScope();
-        $this->applyCriteria();
-
-        $model = $this->model;
+        $this->newQuery();
 
         foreach ($where as $field => $value) {
             if (is_array($value)) {
                 list($field, $condition, $val) = $value;
-                $model = $model->where($field, $condition, $val);
+                $this->query->where($field, $condition, $val);
             }
             else {
-                $model = $model->where($field, '=', $value);
+                $this->query->where($field, '=', $value);
             }
         }
 
-        return $model->get($columns);
+        return $this->query->get($columns);
+    }
+
+    /**
+     * Retrieve all data of repository
+     *
+     * @param array $columns
+     * @return Collection
+     */
+    public function all($columns = ['*'])
+    {
+        $this->newQuery();
+
+        return $this->query->get($columns);
+    }
+
+    /**
+     * Get an array with the values of a given column.
+     *
+     * @param  string $value
+     * @param  string $key
+     * @return array
+     */
+    public function lists($value, $key = null)
+    {
+        $this->newQuery();
+
+        $lists = $this->query->lists($value, $key);
+
+        if (is_array($lists)) {
+            return $lists;
+        }
+
+        return $lists->all();
+    }
+
+    /**
+     * Retrieve all data of repository, paginated
+     * @param null  $limit
+     * @param array $columns
+     * @return Paginator
+     */
+    public function paginate($limit = null, $columns = ['*'])
+    {
+        $this->newQuery();
+
+        $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
+
+        return $this->query->paginate($limit, $columns);
+    }
+
+    /**
+     * Save a new entity in repository
+     *
+     * @param array $attributes
+     * @return Model
+     */
+    public function create(array $attributes)
+    {
+        $model = $this->getNew()->create($attributes);
+
+        if ($model) {
+            event(new RepositoryEntityEvent('create', $this));
+        }
+
+        return $model;
+    }
+
+    /**
+     * Update an entity with the given attributes and persist it
+     *
+     * @param  Model $entity
+     * @param  array $attributes
+     * @return bool
+     */
+    public function update(Model $entity, array $attributes)
+    {
+        $result = $entity->update($attributes);
+
+        if ($result) {
+            event(new RepositoryEntityEvent('update', $this));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Delete a entity in repository
+     *
+     * @param  mixed $entry
+     * @return int
+     */
+    public function delete($entry)
+    {
+        if (($entry instanceof Model) === false) {
+            $entity = $this->find($entry);
+        }
+
+        $result = $entity->delete();
+
+        if ($result) {
+            event(new RepositoryEntityEvent('delete', $this));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Load relations
+     *
+     * @param array $relations
+     * @return $this
+     */
+    public function with(array $relations)
+    {
+        $this->with[] = $relations;
+
+        return $this;
     }
 
     /**
@@ -267,13 +291,11 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function makeModel()
     {
-        $model = app($this->model());
-
-        if (!$model instanceof Model) {
-            throw new RepositoryException("Class {$this->model()} must be an instance of Illuminate\\Database\\Eloquent\\Model");
+        if (!$this->model) {
+            throw new RepositoryException("The model class must be set on the repository.");
         }
 
-        return $this->model = $model;
+        return $this->eloquentModel = with(new $this->model);
     }
 
     /**
@@ -284,17 +306,7 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     public function scopeQuery(\Closure $scope)
     {
-        $this->scopeQuery = $scope;
-
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function resetCriteria()
-    {
-        $this->skipCriteria(false);
+        $this->scopeQuery[] = $scope;
 
         return $this;
     }
@@ -306,69 +318,14 @@ abstract class Repository implements RepositoryInterface, CriteriaInterface
      */
     protected function applyScope()
     {
-        if (is_callable($this->scopeQuery)) {
-            $callback = $this->scopeQuery;
-            $this->model = $callback($this->model);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param AbstractCriteria $criteria
-     * @return $this
-     */
-    public function pushCriteria(AbstractCriteria $criteria)
-    {
-        $this->criteria->push($criteria);
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCriteria()
-    {
-        return $this->criteria;
-    }
-
-    /**
-     * @param AbstractCriteria $criteria
-     * @return $this
-     */
-    public function getByCriteria(AbstractCriteria $criteria)
-    {
-        $this->model = $criteria->apply($this->model, $this);
-
-        return $this;
-    }
-
-    /**
-     * @param bool $status
-     * @return $this
-     */
-    public function skipCriteria($status = true)
-    {
-        $this->skipCriteria = $status;
-
-        return $this;
-    }
-
-    /**
-     * @return $this
-     */
-    public function applyCriteria()
-    {
-        if ($this->skipCriteria === true) {
-            return $this;
-        }
-
-        foreach ($this->getCriteria() as $criteria) {
-            if ($criteria instanceof AbstractCriteria) {
-                $this->model = $criteria->apply($this->model, $this);
+        foreach ($this->scopeQuery as $callback) {
+            if (is_callable($callback)) {
+                $this->query = $callback($this->query);
             }
         }
+
+        // Clear scopes
+        $this->scopeQuery = [];
 
         return $this;
     }

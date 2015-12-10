@@ -7,25 +7,18 @@ use Illuminate\Support\ServiceProvider;
 class RepositoryServiceProvider extends ServiceProvider
 {
     /**
-     * Indicates if loading of the provider is deferred.
-     *
-     * @var bool
-     */
-    protected $defer = false;
-
-    /**
      * Register any other events for your application.
      *
      * @return void
      */
     public function boot()
     {
-        $this->publishes(array(
-            __DIR__ . '/../../../resources/config/repositories.php' => config_path('repositories.php')
-        ));
+        $this->publishes([
+            __DIR__ . '/../../../config/repositories.php' => config_path('repositories.php')
+        ]);
 
         $this->mergeConfigFrom(
-            __DIR__ . '/../../../resources/config/repositories.php', 'repositories'
+            __DIR__ . '/../../../config/repositories.php', 'repositories'
         );
     }
 
@@ -36,8 +29,6 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->commands('Torann\LaravelRepository\Console\Commands\MakeRepositoryCommand');
-        $this->commands('Torann\LaravelRepository\Console\Commands\MakeCriteriaCommand');
         $this->app->register('Torann\LaravelRepository\Providers\EventServiceProvider');
     }
 

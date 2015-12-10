@@ -18,8 +18,8 @@ The Laravel Repository package is meant to be a generic repository implementatio
     - [Create a Repository](#create-a-repository)
     - [Generators](#generators)
     - [Use methods](#use-methods)
-    - [Create a Criteria](#create-a-criteria)
-    - [Using the Criteria in a Controller](#using-the-criteria-in-a-controller)
+    - [Scopes](#scopes)
+    - [Using the Scope in a Controller](#using-the-scope-in-a-controller)
 - [Cache](#cache)
     - [Usage](#cache-usage)
     - [Config](#cache-config)
@@ -67,21 +67,17 @@ The following methods are available:
  - all($columns = array('*'))
  - lists($value, $key = null)
  - paginate($perPage = 1, $columns = array('*'));
- - create(array $data)
- - update(array $data, $id, $attribute = "id")
- - delete($id)
+ - create(array $attributes)
+ - update(Model $entity, array $attributes)
+ - delete($entry)
  - find($id, $columns = array('*'))
  - findBy($field, $value, $columns = array('*'))
  - findAllBy($field, $value, $columns = array('*'))
  - findWhere($where, $columns = array('*'))
 
-### Torann\LaravelRepository\Contracts\CriteriaInterface
-
- - apply($model, Repository $repository)
-
 ### Torann\LaravelRepository\Contracts\CacheableInterface
 
- - getCache($method, $args = null, Closure $callback)
+ - getCache($method, $args = null)
  - getCacheKey($method, $args = null)
  - getCacheMinutes()
  - skipCache($status = true)
@@ -128,52 +124,9 @@ class UsersRepository extends Repository
      *
      * @return string
      */
-    public function model()
-    {
-        return 'App\User';
-    }
+    protected $model = \App\User::class;
 }
 ```
-
-### Generators
-
-Create your repositories easily through the generator.
-
-#### Config
-
-You must first configure the storage location of the repository files. By default is the "app" folder and the namespace "App".
-
-##### Command `make:repository`
-
-To generate a repository for your User model, use the following command
-
-```
-php artisan make:repository User
-```
-
-Use a different model from the repository
-
-```
-php artisan make:repository User --model=SystemUser
-```
-
-> This command will create the new repository inside the repository folder set in the config file (default "App/Repositories").
-
-##### Command `make:criteria`
-
-To generate criteria use the following command
-
-```
-php artisan make:criteria SystemAdmin
-```
-
-Use a different model from the repository
-
-```
-php artisan make:criteria SystemAdmin --model=SystemUser
-```
-
-> This command will create the new criteria inside the criteria folder set in the config file (default "App/Repositories/Criteria").
 
 ### Use methods
 
@@ -230,6 +183,12 @@ Or you can get all rows by a single column criteria.
 $this->repository->findAllBy('author_id', $author_id);
 ```
 
+Or you can get all rows by a single column criteria and set of ids.
+
+```php
+$this->repository->findAllBy('author_id', [1, 22, 45]);
+```
+
 Get all results by multiple fields
 
 ```php
@@ -248,7 +207,8 @@ $post = $this->repository->create(Input::all());
 Update entry in Repository
 
 ```php
-$post = $this->repository->update(Input::all(), $id);
+$user = $this->repository->find($id);
+$post = $this->repository->update($user, $attributes);
 ```
 
 Delete entry in Repository
@@ -257,35 +217,49 @@ Delete entry in Repository
 $this->repository->delete($id)
 ```
 
-### Create a Criteria
+Or delete entry in Repository by model object
 
-Criteria are a way to change the repository of the query by applying specific conditions according to your needs. You can add multiple Criteria in your repository.
+```php
+$user = $this->repository->find($id);
+$this->repository->delete($user)
+```
+
+### Scopes
+
+Scopes are a way to change the repository of the query by applying specific conditions according to your needs. You can add multiple Criteria in your repository.
 
 ```php
 <?php
 
-namespace App\Repositories\Criteria\Users;
+namespace App\Repositories;
 
-use Torann\LaravelRepository\Criteria\AbstractCriteria;
+use Torann\LaravelRepository\Eloquent\Repository;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 
-class MyCriteria extends AbstractCriteria
+class UsersRepository extends Repository
 {
     /**
-     * @param $model
-     * @param RepositoryInterface $repository
-     * @return mixed
+     * Specify Model class name
+     *
+     * @return string
      */
-    public function apply($model, RepositoryInterface $repository)
+    protected $model = \App\User::class;
+    
+    /**
+     * Filter by author attribute
+     *
+     * @return self
+     */
+    public function authorsOnly()
     {
-        $model = $model->where('is_admin', true);
-
-        return $model;
+        return $this->scopeQuery(function($query) {
+            return $query->where('is_author', '=', true);
+        });
     }
 }
 ```
 
-### Using the Criteria in a Controller
+### Using the Scope in a Controller
 
 ```php
 <?php
@@ -293,7 +267,6 @@ class MyCriteria extends AbstractCriteria
 namespace App\Http\Controllers;
 
 use App\Repositories\UsersRepository;
-use App\Repositories\Criteria\Users\MyCriteria;
 
 class UsersController extends Controller
 {
@@ -302,47 +275,28 @@ class UsersController extends Controller
      */
     protected $repository;
 
+    /**
+     * Create a new Controller instance.
+     *
+     * @param UsersRepository $repository
+     */
     public function __construct(UsersRepository $repository)
     {
         $this->repository = $repository;
     }
 
+    /**
+     * Display a listing of authors.
+     *
+     * @return Response
+     */
     public function index()
     {
-        $this->film->pushCriteria(new MyCriteria());
+        $authors = $this->repository->authorsOnly()->all();
 
-        return \Response::json($this->film->all());
+        return \Response::json($authors);
     }
 }
-```
-
-Setting the default Criteria in Repository
-
-```php
-use Torann\LaravelRepository\Eloquent\Repository;
-
-class PostRepository extends Repository
-{
-    public function boot()
-    {
-        $this->pushCriteria(new MyCriteria());
-        $this->pushCriteria(new AnotherCriteria());
-        ...
-    }
-
-    function model()
-    {
-       return "App\\Post";
-    }
-}
-```
-
-### Skip criteria defined in the repository
-
-Use `skipCriteria` before any other chaining method
-
-```php
-$posts = $this->repository->skipCriteria()->all();
 ```
 
 ### Cache
@@ -350,6 +304,8 @@ $posts = $this->repository->skipCriteria()->all();
 Add a layer of cache easily to your repository
 
 #### Cache Usage
+
+> This is not 100% yet
 
 > **Note**: Caching uses [Cache Tags](http://laravel.com/docs/5.1/cache#cache-tags), so caching is not supported when using the `file` or `database` cache drivers.
 
@@ -368,11 +324,51 @@ class PostRepository extends Repository implements CacheableInterface
 }
 ```
 
-Done, your repository will be cached and the repository cache is cleared whenever an item is created, modified or deleted.
+To cache data simple call your method prefixed with `cached`. See example below.
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Repositories\PostRepository;
+
+class PostsController extends Controller
+{
+    /**
+     * @var PostRepository
+     */
+    protected $repository;
+
+    /**
+     * Create a new Controller instance.
+     *
+     * @param UsersRepository $repository
+     */
+    public function __construct(PostRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
+    /**
+     * Display a cached listing of posts.
+     *
+     * @return Response
+     */
+    public function index()
+    {
+        $posts = $this->repository->cachedAll();
+
+        return \Response::json($posts);
+    }
+}
+```
+
+The repository cache is cleared whenever an item is created, modified or deleted.
 
 #### Cache Config
 
-You can change the cache settings in the file *config/repositories.php* and also directly on your repository.
+You can change the cache settings in the file `config/repositories.php` and also directly on your repository.
 
 It is possible to override these settings directly in the repository.
 
@@ -411,5 +407,3 @@ class PostRepository extends Repository implements CacheableInterface
     ...
 }
 ```
-
-The cacheable methods are: `all`, `lists`, `paginate`, `find`, `findBy`, `findAllBy`, and `findWhere`.
