@@ -11,8 +11,6 @@ The Laravel Repository package is meant to be a generic repository implementatio
     - [Laravel](#laravel)
 - [Methods](#methods)
     - [RepositoryInterface](#torannlaravelrepositorycontractsrepositoryinterface)
-    - [CriteriaInterface](#torannlaravelrepositorycontractscriteriainterface)
-    - [CacheableInterface](#torannlaravelrepositorycontractscacheableinterface)
 - [Usage](#usage)
     - [Create a Model](#create-a-model)
     - [Create a Repository](#create-a-repository)
@@ -75,7 +73,7 @@ The following methods are available:
  - findAllBy($field, $value, $columns = array('*'))
  - findWhere($where, $columns = array('*'))
 
-### Torann\LaravelRepository\Contracts\CacheableInterface
+**Caching Methods**
 
  - getCache($method, $args = null)
  - getCacheKey($method, $args = null)
@@ -305,18 +303,15 @@ Add a layer of cache easily to your repository
 
 #### Cache Usage
 
-> This is not 100% yet
-
-> **Note**: Caching uses [Cache Tags](http://laravel.com/docs/5.1/cache#cache-tags), so caching is not supported when using the `file` or `database` cache drivers.
+> **Note**: Caching uses [Cache Tags](http://laravel.com/docs/5.1/cache#cache-tags), so caching is not supported when using the `file` or `database` cache drivers. This makes the Laravel Repository super scalable.
 
 Implements the interface CacheableInterface and use CacheableRepository Trait.
 
 ```php
 use Torann\LaravelRepository\Eloquent\Repository;
 use Torann\LaravelRepository\Traits\CacheableRepository;
-use Torann\LaravelRepository\Contracts\CacheableInterface;
 
-class PostRepository extends Repository implements CacheableInterface
+class PostRepository extends Repository
 {
     use CacheableRepository;
 
@@ -324,7 +319,7 @@ class PostRepository extends Repository implements CacheableInterface
 }
 ```
 
-To cache data simple call your method prefixed with `cached`. See example below.
+Done, your repository will be cached and the repository cache is cleared whenever an item is created, modified or deleted.
 
 ```php
 <?php
@@ -368,16 +363,15 @@ The repository cache is cleared whenever an item is created, modified or deleted
 
 #### Cache Config
 
-You can change the cache settings in the file `config/repositories.php` and also directly on your repository.
+Enabling and disabling the cache globally can be done in the settings file `config/repositories.php`.
 
-It is possible to override these settings directly in the repository.
+It is possible to override the default settings directly in the repository.
 
 ```php
 use Torann\LaravelRepository\Eloquent\Repository;
-use Torann\LaravelRepository\Contracts\CacheableInterface;
 use Torann\LaravelRepository\Traits\CacheableRepository;
 
-class PostRepository extends Repository implements CacheableInterface
+class PostRepository extends Repository
 {
     use CacheableRepository;
 
@@ -407,3 +401,5 @@ class PostRepository extends Repository implements CacheableInterface
     ...
 }
 ```
+
+The cacheable methods are: `all`, `lists`, `paginate`, `find`, `findBy`, `findAllBy`, and `findWhere`.

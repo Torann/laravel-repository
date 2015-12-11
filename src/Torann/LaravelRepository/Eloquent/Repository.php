@@ -2,6 +2,8 @@
 
 namespace Torann\LaravelRepository\Eloquent;
 
+use Closure;
+use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
@@ -36,12 +38,50 @@ abstract class Repository implements RepositoryInterface
     protected $with = [];
 
     /**
+     * The relations to eager load on every query.
+     *
+     * @var \Illuminate\Cache\CacheManager
+     */
+    protected $cache;
+
+    /**
+     * Lifetime of the cache.
+     *
+     * @var int
+     */
+    protected $cacheMinutes = 30;
+
+    /**
+     * Skip cache.
+     *
+     * @var int
+     */
+    protected $cacheSkip = false;
+
+    /**
+     * Method to include in caching.
+     *
+     * @var array
+     */
+    protected $cacheOnly = [];
+
+    /**
+     * Method to exclude from caching.
+     *
+     * @var array
+     */
+    protected $cacheExcept = [];
+
+    /**
      * Create a new Repository instance
      *
-     * @throws \Torann\LaravelRepository\Exceptions\RepositoryException
+     * @param  CacheManager $cache
+     * @throws RepositoryException
      */
-    public function __construct()
+    public function __construct(CacheManager $cache)
     {
+        $this->cache = $cache;
+
         $this->makeModel();
         $this->scopeReset();
         $this->boot();
@@ -301,10 +341,10 @@ abstract class Repository implements RepositoryInterface
     /**
      * Add query scope.
      *
-     * @param \Closure $scope
+     * @param Closure $scope
      * @return $this
      */
-    public function addScopeQuery(\Closure $scope)
+    public function addScopeQuery(Closure $scope)
     {
         $this->scopeQuery[] = $scope;
 
@@ -331,6 +371,99 @@ abstract class Repository implements RepositoryInterface
     }
 
     /**
+     * Determine if the cache will be skipped
+     *
+     * @return bool
+     */
+    public function isSkippedCache()
+    {
+        // Check to ensure caching is supported
+        if (in_array(config('cache.default'), ['file', 'database'])) {
+            return true;
+        }
+
+        // Check repository for caching
+        $skipped = isset($this->cacheSkip) ? $this->cacheSkip : false;
+
+        // Check request for cache override
+        if (request(config('repositories.cache.skipParam', 'skipCache'))) {
+            $skipped = true;
+        }
+
+        return $skipped;
+    }
+
+    /**
+     * Determine if method should be cached
+     *
+     * @param $method
+     * @return bool
+     */
+    protected function allowedCache($method)
+    {
+        // Globally turned off
+        if (config('repositories.cache.enabled', false) === false) {
+            return false;
+        }
+
+        // Only cache certain methods
+        if (in_array($method, $this->cacheOnly) === true) {
+            return true;
+        }
+
+        // Cache everything except given methods
+        if (in_array($method, $this->cacheExcept) === false) {
+            return ! in_array($method, $this->cacheExcept);
+        }
+
+        return (empty($this->cacheOnly) && empty($this->cacheExcept));
+    }
+
+    /**
+     * Get Cache key for the method
+     *
+     * @param  string $method
+     * @param  mixed  $args
+     * @return string
+     */
+    public function getCacheKey($method, $args = null)
+    {
+        $args = serialize($args)
+            . serialize($this->scopeQuery)
+            . serialize($this->with);
+
+        return sprintf('%s@%s-%s',
+            get_called_class(),
+            $method,
+            md5($args)
+        );
+    }
+
+    /**
+     * Get an item from the cache, or store the default value.
+     *
+     * @param  string $method
+     * @param  array  $args
+     * @param  Closure $callback
+     * @param  int $time
+     * @return mixed
+     */
+    public function getCache($method, array $args = [], Closure $callback, $time = null)
+    {
+        if ($this->isSkippedCache()) {
+            return $callback($this);
+        }
+
+        // Set cache parameters
+        $key = $this->getCacheKey($method, $args);
+        $time = $time ?: $this->cacheMinutes;
+
+        return $this->cache->tags(get_called_class())->remember($key, $time, function () use ($callback) {
+            return $callback($this);
+        });
+    }
+
+    /**
      * Handle dynamic static method calls into the method.
      *
      * @param  string $method
@@ -340,7 +473,7 @@ abstract class Repository implements RepositoryInterface
     public function __call($method, $parameters)
     {
         // Check for scope method and call
-        if (method_exists($this, $scope = 'scope'.ucfirst($method))) {
+        if (method_exists($this, $scope = 'scope' . ucfirst($method))) {
             return call_user_func_array([$this, $scope], $parameters) ?: $this;
         }
 

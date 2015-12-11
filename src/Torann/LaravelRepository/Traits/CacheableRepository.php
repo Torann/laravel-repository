@@ -5,150 +5,95 @@ namespace Torann\LaravelRepository\Traits;
 trait CacheableRepository
 {
     /**
-     * Skip Cache
+     * Retrieve all data of repository
      *
-     * @param bool $status
-     * @return self
+     * @param array $columns
+     * @return mixed
      */
-    public function skipCache($status = true)
+    public function all($columns = ['*'])
     {
-        $this->cacheSkip = $status;
-
-        return $this;
+        return $this->getCache('all', func_get_args(), function () use ($columns) {
+            return parent::all($columns);
+        });
     }
 
     /**
-     * Determine if the cache will be skipped
-     *
-     * @return bool
+     * @param  string $value
+     * @param  string $key
+     * @return array
      */
-    public function isSkippedCache()
+    public function lists($value, $key = null)
     {
-        // Check to ensure caching is supported
-        if (in_array(config('cache.default'), ['file', 'database'])) {
-            $this->skipCache(true);
-        }
-
-        // Check repository for caching
-        $skipped = isset($this->cacheSkip) ? $this->cacheSkip : false;
-
-        // Check request for cache override
-        if (request(config('repositories.cache.params.skipCache', 'skipCache'))) {
-            $skipped = true;
-        }
-
-        return $skipped;
+        return $this->getCache('lists', func_get_args(), function () use ($value, $key) {
+            return parent::lists($value, $key);
+        });
     }
 
     /**
-     * @param $method
-     * @return bool
+     * Retrieve all data of repository, paginated
+     * @param null  $limit
+     * @param array $columns
+     * @return mixed
      */
-    protected function allowedCache($method)
+    public function paginate($limit = null, $columns = ['*'])
     {
-        $cacheEnabled = config('repositories.cache.enabled', false);
-
-        if (! $cacheEnabled) {
-            return false;
-        }
-
-        $cacheOnly = isset($this->cacheOnly) ? $this->cacheOnly : config('repositories.cache.allowed.only', null);
-        $cacheExcept = isset($this->cacheExcept) ? $this->cacheExcept : config('repositories.cache.allowed.except',
-            null);
-
-        if (is_array($cacheOnly)) {
-            return isset($cacheOnly[$method]);
-        }
-
-        if (is_array($cacheExcept)) {
-            return !in_array($method, $cacheExcept);
-        }
-
-        if (is_null($cacheOnly) && is_null($cacheExcept)) {
-            return true;
-        }
-
-        return false;
+        return $this->getCache('paginate', func_get_args(), function () use ($limit, $columns) {
+            return parent::paginate($limit, $columns);
+        });
     }
 
     /**
-     * Get Cache key for the method
+     * Find data by id
      *
-     * @param $method
-     * @param $args
-     * @return string
+     * @param       $id
+     * @param array $columns
+     * @return mixed
      */
-    public function getCacheKey($method, $args = null)
+    public function find($id, $columns = ['*'])
     {
-        $args = serialize($args);
-
-        return sprintf('%s@%s-%s',
-            get_called_class(),
-            $method,
-            md5($args) // TODO: Add `scopeQuery` and `with` arrays
-        );
+        return $this->getCache('find', func_get_args(), function () use ($id, $columns) {
+            return parent::find($id, $columns);
+        });
     }
 
     /**
-     * Get cache minutes
-     *
-     * @return int
+     * @param       $attribute
+     * @param       $value
+     * @param array $columns
+     * @return mixed
      */
-    public function getCacheMinutes()
+    public function findBy($attribute, $value, $columns = ['*'])
     {
-        return isset($this->cacheMinutes) ? $this->cacheMinutes : config('repositories.cache.minutes', 30);
+        return $this->getCache('findBy', func_get_args(), function () use ($attribute, $value, $columns) {
+            return parent::findBy($attribute, $value, $columns);
+        });
+    }
+
+    /**
+     * @param       $attribute
+     * @param       $value
+     * @param array $columns
+     * @return mixed
+     */
+    public function findAllBy($attribute, $value, $columns = ['*'])
+    {
+        return $this->getCache('findAllBy', func_get_args(), function () use ($attribute, $value, $columns) {
+            return parent::findAllBy($attribute, $value, $columns);
+        });
     }
 
     /**
      * Find data by multiple fields
      *
-     * @param string $method
-     * @param array  $args
+     * @param array $where
+     * @param array $columns
+     * @param bool  $or
      * @return mixed
      */
-    public function getCache($method, $args = [])
+    public function findWhere(array $where, $columns = ['*'], $or = false)
     {
-        if (!$this->allowedCache($method) || $this->isSkippedCache()) {
-            return call_user_func_array([$this, $method], $args);
-        }
-
-        // Get cache manager
-        $cache = app('Illuminate\Cache\CacheManager');
-
-        // Set cache parameters
-        $key = $this->getCacheKey($method, $args);
-        $time = $this->getCacheMinutes();
-
-        return $cache->tags(get_called_class())->remember($key, $time, function () use ($method, $args) {
-            return call_user_func_array([$this, $method], $args);
+        return $this->getCache('findWhere', func_get_args(), function () use ($where, $columns, $or) {
+            return parent::findWhere($where, $columns, $or);
         });
-    }
-
-//    /**
-//     * Retrieve all data of repository
-//     *
-//     * @param array $columns
-//     * @return mixed
-//     */
-//    public function all($columns = ['*'])
-//    {
-//        return $this->getCache('all', [$columns]);
-//    }
-
-    /**
-     * Handle dynamic static method calls into the method.
-     *
-     * @param  string $method
-     * @param  array  $args
-     * @return mixed
-     */
-    public function __call($method, $args)
-    {
-        // Call cached method
-        if (substr($method, 0, 6) === 'cached') {
-            return $this->getCache(lcfirst(substr($method, 6)), $args);
-        }
-
-        return parent::__call($method, $args);
     }
 }
