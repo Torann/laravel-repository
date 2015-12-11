@@ -21,9 +21,18 @@
     "illuminate/database": "~5.1",
     "illuminate/cache": "^5.1"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^4.8",
+    "mockery/mockery": "^0.9.4"
+  },
   "autoload": {
     "psr-4": {
       "Torann\\LaravelRepository\\": "src/Torann/LaravelRepository"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Torann\\LaravelRepository\\Test\\": "tests"
     }
   },
   "extra": {

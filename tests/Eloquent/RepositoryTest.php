@@ -1,12 +1,8 @@
 <?php
-namespace Torann\LaravelRepository\Eloquent\Repository;
 
-use Mockery;
-use Torann\LaravelRepository\TestCase;
+namespace Torann\LaravelRepository\Test\Eloquent\Repository;
 
-use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
+use Torann\LaravelRepository\Test\TestCase;
 
 class RepositoryTest extends TestCase
 {
@@ -19,9 +15,8 @@ class RepositoryTest extends TestCase
     {
         $repo = $this->make();
 
-        $repo->getModel()
-            ->shouldReceive('get')
-            ->once()
+        $repo->builderMock
+            ->shouldReceive('get')->once()
             ->andReturn('foo');
 
         $this->assertEquals('foo', $repo->all());
@@ -35,19 +30,18 @@ class RepositoryTest extends TestCase
         $expectedArray = [
             [
                 'title' => 'admin',
-                'name' => 'Bill'
+                'name' => 'Bill',
             ],
             [
                 'title' => 'user',
-                'name' => 'Kelly'
+                'name' => 'Kelly',
             ]
         ];
 
         $repo = $this->make();
 
-        $repo->getModel()
-            ->shouldReceive('lists')
-            ->once()
+        $repo->builderMock
+            ->shouldReceive('lists')->once()
             ->andReturn($expectedArray);
 
         $this->assertEquals($expectedArray, $repo->lists('title', 'name'));
@@ -60,9 +54,8 @@ class RepositoryTest extends TestCase
     {
         $repo = $this->make();
 
-        $repo->getModel()
-            ->shouldReceive('paginate')
-            ->once()
+        $repo->builderMock
+            ->shouldReceive('paginate')->once()
             ->andReturn(true);
 
         $this->assertEquals(true, $repo->paginate(11));
@@ -76,14 +69,13 @@ class RepositoryTest extends TestCase
         $expectedArray = [
             'id' => 123,
             'email' => 'admin@mail.com',
-            'name' => 'Bill'
+            'name' => 'Bill',
         ];
 
         $repo = $this->make();
 
-        $repo->getModel()
-            ->shouldReceive('find')
-            ->once()
+        $repo->builderMock
+            ->shouldReceive('find')->once()
             ->andReturn($expectedArray);
 
         $this->assertEquals($expectedArray, $repo->find($expectedArray['id']));
@@ -97,16 +89,19 @@ class RepositoryTest extends TestCase
         $expectedArray = [
             'id' => 123,
             'email' => 'admin@mail.com',
-            'name' => 'Bill'
+            'name' => 'Bill',
         ];
 
         $repo = $this->make();
         $query = $this->makeMockQuery();
 
-        $repo->getModel()
-            ->shouldReceive('where')->once()->with('id', '=', 123)->once()->andReturn($query);
+        $repo->builderMock
+            ->shouldReceive('where')->once()
+            ->with('id', '=', $expectedArray['id'])->once()
+            ->andReturn($query);
 
-        $query->shouldReceive('first')->once()->andReturn($expectedArray);
+        $query->shouldReceive('first')->once()
+            ->andReturn($expectedArray);
 
         $this->assertEquals($expectedArray, $repo->findBy('id', $expectedArray['id']));
     }
@@ -120,24 +115,61 @@ class RepositoryTest extends TestCase
             [
                 'id' => 123,
                 'email' => 'admin@mail.com',
-                'name' => 'Bill'
+                'name' => 'Bill',
             ],
             [
                 'id' => 124,
                 'email' => 'admin@mail.com',
-                'name' => 'Todd'
+                'name' => 'Todd',
             ]
         ];
 
         $repo = $this->make();
         $query = $this->makeMockQuery();
 
-        $repo->getModel()
-            ->shouldReceive('where')->once()->with('email', '=', 'admin@mail.com')->once()->andReturn($query);
+        $repo->builderMock
+            ->shouldReceive('where')->once()
+            ->with('email', '=', 'admin@mail.com')->once()
+            ->andReturn($query);
 
-        $query->shouldReceive('get')->once()->andReturn($expectedArray);
+        $query->shouldReceive('get')->once()
+            ->andReturn($expectedArray);
 
         $this->assertEquals($expectedArray, $repo->findAllBy('email', 'admin@mail.com'));
+    }
+
+    /**
+     * @test
+     */
+    public function testFindAllByArray()
+    {
+        $ids = [1, 33];
+
+        $expectedArray = [
+            [
+                'id' => 1,
+                'email' => 'admin@mail.com',
+                'name' => 'Bill',
+            ],
+            [
+                'id' => 33,
+                'email' => 'admin@mail.com',
+                'name' => 'Todd',
+            ]
+        ];
+
+        $repo = $this->make();
+        $query = $this->makeMockQuery();
+
+        $repo->builderMock
+            ->shouldReceive('whereIn')->once()
+            ->with('id', $ids)->once()
+            ->andReturn($query);
+
+        $query->shouldReceive('get')->once()
+            ->andReturn($expectedArray);
+
+        $this->assertEquals($expectedArray, $repo->findAllBy('id', $ids));
     }
 
     /**
@@ -149,20 +181,80 @@ class RepositoryTest extends TestCase
             [
                 'id' => 123,
                 'email' => 'admin@mail.com',
-                'name' => 'Bill'
+                'name' => 'Bill',
+            ]
+        ];
+
+        $repo = $this->make();
+
+        $repo->builderMock
+            ->shouldReceive('where')->once()
+            ->with('id', '=', 123)->once()
+            ->shouldReceive('get')->once()
+            ->andReturn($expectedArray);
+
+        $this->assertEquals($expectedArray, $repo->findWhere([
+            'id' => 123
+        ]));
+    }
+
+    /**
+     * @test
+     */
+    public function testFindWhereWithConditions()
+    {
+        $expectedArray = [
+            [
+                'id' => 123,
+                'email' => 'admin@mail.com',
+                'name' => 'Bill',
+            ]
+        ];
+
+        $repo = $this->make();
+
+        $repo->builderMock
+            ->shouldReceive('where')->once()
+            ->with('id', '<', 123)->once()
+            ->shouldReceive('get')->once()
+            ->andReturn($expectedArray);
+
+        $this->assertEquals($expectedArray, $repo->findWhere([
+            ['id', '<', 123]
+        ]));
+    }
+
+    /**
+     * @test
+     */
+    public function testFindUsingScope()
+    {
+        $expectedArray = [
+            [
+                'id' => 123,
+                'email' => 'admin@mail.com',
+                'name' => 'Bill',
+                'is_admin' => true,
+            ],
+            [
+                'id' => 33,
+                'email' => 'admin@mail.com',
+                'name' => 'Todd',
+                'is_admin' => true,
             ]
         ];
 
         $repo = $this->make();
         $query = $this->makeMockQuery();
 
-        $repo->getModel()
-            ->shouldReceive('where')->once()->with('id', '=', 123)->once()->andReturn($query);
+        $repo->builderMock
+            ->shouldReceive('where')->once()
+            ->with('is_admin', true)->once()
+            ->andReturn($query);
 
-        $query->shouldReceive('get')->once()->andReturn($expectedArray);
+        $query->shouldReceive('get')->once()
+            ->andReturn($expectedArray);
 
-        $this->assertEquals($expectedArray, $repo->findWhere([
-            'id' => 123
-        ]));
+        $this->assertEquals($expectedArray, $repo->adminOnlyScope()->all());
     }
 }
