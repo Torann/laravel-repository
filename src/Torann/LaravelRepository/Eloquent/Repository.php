@@ -16,7 +16,7 @@ abstract class Repository implements RepositoryInterface
     /**
      * @var \Illuminate\Database\Eloquent\Model
      */
-    protected $eloquentModel;
+    protected $modelInstance;
 
     /**
      * @var \Illuminate\Database\Eloquent\Builder
@@ -110,6 +110,16 @@ abstract class Repository implements RepositoryInterface
     }
 
     /**
+     * Return model instance.
+     *
+     * @return Model
+     */
+    public function getModel()
+    {
+        return $this->modelInstance;
+    }
+
+    /**
      * Get a new entity instance
      *
      * @param  array $attributes
@@ -117,7 +127,7 @@ abstract class Repository implements RepositoryInterface
      */
     public function getNew(array $attributes = [])
     {
-        return $this->eloquentModel->newInstance($attributes);
+        return $this->modelInstance->newInstance($attributes);
     }
 
     /**
@@ -335,7 +345,7 @@ abstract class Repository implements RepositoryInterface
             throw new RepositoryException("The model class must be set on the repository.");
         }
 
-        return $this->eloquentModel = with(new $this->model);
+        return $this->modelInstance = with(new $this->model);
     }
 
     /**

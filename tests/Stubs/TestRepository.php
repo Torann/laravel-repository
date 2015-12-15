@@ -19,7 +19,7 @@ class TestRepository extends Repository
         $mock = Mockery::mock('Illuminate\Database\Eloquent\Model');
         $mock->shouldReceive('newInstance')->andReturn($newInstanceMock);
 
-        return $this->eloquentModel = $mock;
+        return $this->modelInstance = $mock;
     }
 
     public function scopeAdminOnlyScope()
