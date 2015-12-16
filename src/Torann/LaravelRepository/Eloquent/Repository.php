@@ -10,15 +10,12 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Auth\Access\UnauthorizedException;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Torann\LaravelRepository\Events\RepositoryEntityEvent;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 
 abstract class Repository implements RepositoryInterface
 {
-    use AuthorizesRequests;
-
     /**
      * @var \Illuminate\Database\Eloquent\Model
      */
@@ -530,34 +527,32 @@ abstract class Repository implements RepositoryInterface
     /**
      * Check if action is authorized.
      *
-     * @param  string  $policy
-     * @param  Model   $entity
+     * @param  string $ability
+     * @param  Model  $entity
      * @return bool
      */
-    public function isAuthorized($policy, $entity)
+    public function isAuthorized($ability, $entity)
     {
-        if (! in_array($policy, $this->authorization)) {
+        if (! in_array($ability, $this->authorization)) {
             return true;
         }
 
-        return $this->authorize($policy, $entity);
+        return $this->authorize($ability, $entity);
     }
 
     /**
-     * Authorize the request at the given gate.
+     * Authorize a given action against a set of arguments.
      *
-     * @param  \Illuminate\Contracts\Auth\Access\Gate  $gate
-     * @param  mixed  $ability
-     * @param  mixed|array  $arguments
+     * @param  string $ability
+     * @param  mixed  $arguments
      * @return bool
      */
-    public function authorizeAtGate(Gate $gate, $ability, $arguments)
+    public function authorize($ability, $arguments = [])
     {
         try {
-            return $gate->authorize($ability, $arguments);
+            return app(Gate::class)->authorize($ability, $arguments);
         }
         catch (UnauthorizedException $e) {
-            // Add error to message bag
             $this->errors->add('message',
                 $e->getMessage() ?: trans('errors.This action is unauthorized')
             );

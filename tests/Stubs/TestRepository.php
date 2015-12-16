@@ -9,6 +9,8 @@ class TestRepository extends Repository
 {
     public $builderMock;
 
+    protected $authorization = [];
+
     public function makeModel()
     {
         $this->builderMock = Mockery::mock('Illuminate\Database\Eloquent\Builder');
