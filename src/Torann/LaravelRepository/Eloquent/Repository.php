@@ -3,20 +3,33 @@
 namespace Torann\LaravelRepository\Eloquent;
 
 use Closure;
+use Illuminate\Support\MessageBag;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Auth\Access\UnauthorizedException;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Torann\LaravelRepository\Events\RepositoryEntityEvent;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 
 abstract class Repository implements RepositoryInterface
 {
+    use AuthorizesRequests;
+
     /**
      * @var \Illuminate\Database\Eloquent\Model
      */
     protected $modelInstance;
+
+    /**
+     * The errors MesssageBag instance
+     *
+     * @var \Illuminate\Support\MessageBag
+     */
+    protected $errors;
 
     /**
      * @var \Illuminate\Database\Eloquent\Builder
@@ -36,6 +49,17 @@ abstract class Repository implements RepositoryInterface
      * @var array
      */
     protected $with = [];
+
+    /**
+     * Array of actions that require authorization.
+     *
+     * @var array
+     */
+    protected $authorization = [
+        'create',
+        'update',
+        'destroy',
+    ];
 
     /**
      * The relations to eager load on every query.
@@ -127,6 +151,8 @@ abstract class Repository implements RepositoryInterface
      */
     public function getNew(array $attributes = [])
     {
+        $this->errors = new MessageBag;
+
         return $this->modelInstance->newInstance($attributes);
     }
 
@@ -271,16 +297,22 @@ abstract class Repository implements RepositoryInterface
      *
      * @param array $attributes
      * @return Model
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
     public function create(array $attributes)
     {
-        $model = $this->getNew()->create($attributes);
+        $entity = $this->getNew($attributes);
 
-        if ($model) {
+        // Check authorization
+        if ($this->isAuthorized('create', $entity) === false) {
+            return false;
+        }
+
+        if ($entity->save()) {
             event(new RepositoryEntityEvent('create', $this));
         }
 
-        return $model;
+        return $entity;
     }
 
     /**
@@ -289,9 +321,15 @@ abstract class Repository implements RepositoryInterface
      * @param  Model $entity
      * @param  array $attributes
      * @return bool
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
     public function update(Model $entity, array $attributes)
     {
+        // Check authorization
+        if ($this->isAuthorized('update', $entity) === false) {
+            return false;
+        }
+
         $result = $entity->update($attributes);
 
         if ($result) {
@@ -304,13 +342,19 @@ abstract class Repository implements RepositoryInterface
     /**
      * Delete a entity in repository
      *
-     * @param  mixed $entry
+     * @param  mixed $entity
      * @return int
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
-    public function delete($entry)
+    public function delete($entity)
     {
-        if (($entry instanceof Model) === false) {
-            $entity = $this->find($entry);
+        if (($entity instanceof Model) === false) {
+            $entity = $this->find($entity);
+        }
+
+        // Check authorization
+        if ($this->isAuthorized('destroy', $entity) === false) {
+            return false;
         }
 
         $result = $entity->delete();
@@ -378,6 +422,16 @@ abstract class Repository implements RepositoryInterface
         $this->scopeQuery = [];
 
         return $this;
+    }
+
+    /**
+     * Get the repository's error messages.
+     *
+     * @return \Illuminate\Support\MessageBag
+     */
+    public function getErrors()
+    {
+        return $this->errors;
     }
 
     /**
@@ -471,6 +525,45 @@ abstract class Repository implements RepositoryInterface
         return $this->cache->tags(get_called_class())->remember($key, $time, function () use ($callback) {
             return $callback($this);
         });
+    }
+
+    /**
+     * Check if action is authorized.
+     *
+     * @param  string  $policy
+     * @param  Model   $entity
+     * @return bool
+     */
+    public function isAuthorized($policy, $entity)
+    {
+        if (! in_array($policy, $this->authorization)) {
+            return true;
+        }
+
+        return $this->authorize($policy, $entity);
+    }
+
+    /**
+     * Authorize the request at the given gate.
+     *
+     * @param  \Illuminate\Contracts\Auth\Access\Gate  $gate
+     * @param  mixed  $ability
+     * @param  mixed|array  $arguments
+     * @return bool
+     */
+    public function authorizeAtGate(Gate $gate, $ability, $arguments)
+    {
+        try {
+            return $gate->authorize($ability, $arguments);
+        }
+        catch (UnauthorizedException $e) {
+            // Add error to message bag
+            $this->errors->add('message',
+                $e->getMessage() ?: trans('errors.This action is unauthorized')
+            );
+
+            return false;
+        }
     }
 
     /**
