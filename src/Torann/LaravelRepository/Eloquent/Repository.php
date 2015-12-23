@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Access\Gate;
-use Illuminate\Auth\Access\UnauthorizedException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Torann\LaravelRepository\Events\RepositoryEntityEvent;
 use Torann\LaravelRepository\Contracts\RepositoryInterface;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
@@ -552,7 +552,7 @@ abstract class Repository implements RepositoryInterface
         try {
             return app(Gate::class)->authorize($ability, $arguments);
         }
-        catch (UnauthorizedException $e) {
+        catch (AuthorizationException $e) {
             $this->errors->add('message',
                 $e->getMessage() ?: trans('errors.This action is unauthorized')
             );
