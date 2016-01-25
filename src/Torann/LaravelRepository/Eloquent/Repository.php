@@ -58,11 +58,18 @@ abstract class Repository implements RepositoryInterface
     ];
 
     /**
-     * The relations to eager load on every query.
+     * Instance of cache manager.
      *
      * @var \Illuminate\Cache\CacheManager
      */
     protected $cache;
+
+    /**
+     * The cache event to fire.
+     *
+     * @var string
+     */
+    protected $cacheEvent = RepositoryEntityEvent::class;
 
     /**
      * Lifetime of the cache.
@@ -274,6 +281,7 @@ abstract class Repository implements RepositoryInterface
 
     /**
      * Retrieve all data of repository, paginated
+     *
      * @param null  $limit
      * @param array $columns
      * @return Paginator
@@ -285,6 +293,18 @@ abstract class Repository implements RepositoryInterface
         $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
 
         return $this->query->paginate($limit, $columns);
+    }
+
+    /**
+     * Retrieve all data of repository, paginated
+     *
+     * @return string
+     */
+    public function toSql()
+    {
+        $this->newQuery();
+
+        return $this->query->toSql();
     }
 
     /**
@@ -304,7 +324,7 @@ abstract class Repository implements RepositoryInterface
         }
 
         if ($entity->save()) {
-            event(new RepositoryEntityEvent('create', $this));
+            event(new $this->cacheEvent('create', $this));
         }
 
         return $entity;
@@ -328,7 +348,7 @@ abstract class Repository implements RepositoryInterface
         $result = $entity->update($attributes);
 
         if ($result) {
-            event(new RepositoryEntityEvent('update', $this));
+            event(new $this->cacheEvent('update', $this));
         }
 
         return $result;
@@ -355,7 +375,7 @@ abstract class Repository implements RepositoryInterface
         $result = $entity->delete();
 
         if ($result) {
-            event(new RepositoryEntityEvent('delete', $this));
+            event(new $this->cacheEvent('delete', $this));
         }
 
         return $result;
@@ -445,7 +465,7 @@ abstract class Repository implements RepositoryInterface
         $skipped = isset($this->cacheSkip) ? $this->cacheSkip : false;
 
         // Check request for cache override
-        if (request(config('repositories.cache.skipParam', 'skipCache'))) {
+        if (app('request')->get(config('repositories.cache.skipParam', 'skipCache'))) {
             $skipped = true;
         }
 
@@ -499,6 +519,18 @@ abstract class Repository implements RepositoryInterface
     }
 
     /**
+     * Get cache tags.
+     *
+     * @return array
+     */
+    public function getCacheTags()
+    {
+        return [
+            get_called_class()
+        ];
+    }
+
+    /**
      * Get an item from the cache, or store the default value.
      *
      * @param  string $method
@@ -514,10 +546,11 @@ abstract class Repository implements RepositoryInterface
         }
 
         // Set cache parameters
+        $tags = $this->getCacheTags();
         $key = $this->getCacheKey($method, $args);
         $time = $time ?: $this->cacheMinutes;
 
-        return $this->cache->tags(get_called_class())->remember($key, $time, function () use ($callback) {
+        return $this->cache->tags($tags)->remember($key, $time, function () use ($callback) {
             return $callback($this);
         });
     }
