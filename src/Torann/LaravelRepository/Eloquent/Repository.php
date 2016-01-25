@@ -4,7 +4,6 @@ namespace Torann\LaravelRepository\Eloquent;
 
 use Closure;
 use Illuminate\Support\MessageBag;
-use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
@@ -96,12 +95,11 @@ abstract class Repository implements RepositoryInterface
     /**
      * Create a new Repository instance
      *
-     * @param  CacheManager $cache
      * @throws RepositoryException
      */
-    public function __construct(CacheManager $cache)
+    public function __construct()
     {
-        $this->cache = $cache;
+        $this->cache = app('cache');
 
         $this->makeModel();
         $this->scopeReset();
