@@ -13,9 +13,9 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        'Torann\LaravelRepository\Events\RepositoryEntityEvent' => [
-            'Torann\LaravelRepository\Listeners\CleanCacheRepository'
-        ]
+        \Torann\LaravelRepository\Events\RepositoryEvent::class => [
+            \Torann\LaravelRepository\Listeners\CleanCacheRepository::class
+        ],
     ];
 
     /**

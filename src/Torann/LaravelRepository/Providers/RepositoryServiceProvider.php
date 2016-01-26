@@ -13,13 +13,15 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->publishes([
-            __DIR__ . '/../../../config/repositories.php' => config_path('repositories.php')
-        ]);
+        if ($this->isLumen() === false) {
+            $this->publishes([
+                __DIR__ . '/../../../config/repositories.php' => config_path('repositories.php')
+            ]);
 
-        $this->mergeConfigFrom(
-            __DIR__ . '/../../../config/repositories.php', 'repositories'
-        );
+            $this->mergeConfigFrom(
+                __DIR__ . '/../../../config/repositories.php', 'repositories'
+            );
+        }
     }
 
     /**
@@ -29,7 +31,22 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->register('Torann\LaravelRepository\Providers\EventServiceProvider');
+        if ($this->isLumen() === false) {
+            $this->app->register(\Torann\LaravelRepository\Providers\EventServiceProvider::class);
+        }
+        else {
+            $this->app->register(\Torann\LaravelRepository\Providers\LumenEventServiceProvider::class);
+        }
+    }
+
+    /**
+     * Check if package is running under Lumen app
+     *
+     * @return bool
+     */
+    protected function isLumen()
+    {
+        return str_contains($this->app->version(), 'Lumen') === true;
     }
 
     /**

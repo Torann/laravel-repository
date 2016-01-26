@@ -1,6 +1,6 @@
 <?php
 
-namespace Torann\LaravelRepository\Contracts;
+namespace Torann\LaravelRepository\Repositories;
 
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
@@ -10,17 +10,18 @@ use Torann\LaravelRepository\Exceptions\RepositoryException;
 interface RepositoryInterface
 {
     /**
-     * Reset internal Query
+     * Return model instance.
      *
-     * @return $this
+     * @return Model
      */
-    public function scopeReset();
+    public function getModel();
 
     /**
      * Find data by id
      *
-     * @param       $id
-     * @param array $columns
+     * @param  mixed $id
+     * @param  array $columns
+     *
      * @return Model|Collection
      */
     public function find($id, $columns = ['*']);
@@ -31,6 +32,7 @@ interface RepositoryInterface
      * @param       $field
      * @param       $value
      * @param array $columns
+     *
      * @return Model|Collection
      */
     public function findBy($field, $value, $columns = ['*']);
@@ -41,6 +43,7 @@ interface RepositoryInterface
      * @param mixed $attribute
      * @param mixed $value
      * @param array $columns
+     *
      * @return mixed
      */
     public function findAllBy($attribute, $value, $columns = ['*']);
@@ -50,6 +53,7 @@ interface RepositoryInterface
      *
      * @param array $where
      * @param array $columns
+     *
      * @return mixed
      */
     public function findWhere(array $where, $columns = ['*']);
@@ -58,6 +62,7 @@ interface RepositoryInterface
      * Retrieve all data of repository
      *
      * @param array $columns
+     *
      * @return Collection
      */
     public function all($columns = ['*']);
@@ -67,14 +72,17 @@ interface RepositoryInterface
      *
      * @param  string $value
      * @param  string $key
+     *
      * @return array
      */
     public function lists($value, $key = null);
 
     /**
      * Retrieve all data of repository, paginated
+     *
      * @param null  $limit
      * @param array $columns
+     *
      * @return Paginator
      */
     public function paginate($limit = null, $columns = ['*']);
@@ -83,7 +91,9 @@ interface RepositoryInterface
      * Save a new entity in repository
      *
      * @param array $attributes
-     * @return Model
+     * @return Model|bool
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
     public function create(array $attributes);
 
@@ -91,38 +101,45 @@ interface RepositoryInterface
      * Update an entity with the given attributes and persist it
      *
      * @param  Model $entity
-     * @param  array $data
+     * @param  array $attributes
+     *
      * @return bool
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
-    public function update(Model $entity, array $data);
+    public function update(Model $entity, array $attributes);
 
     /**
-     * Delete a entity in repository by id
+     * Delete a entity in repository
      *
-     * @param $id
-     * @return bool
+     * @param  mixed $entity
+     *
+     * @return int
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
-    public function delete($id);
+    public function delete($entity);
 
     /**
      * Load relations
      *
      * @param array $relations
+     *
      * @return $this
      */
     public function with(array $relations);
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder
-     * @throws RepositoryException
+     * Get the raw SQL statements for the request
+     *
+     * @return string
      */
-    public function makeModel();
+    public function toSql();
 
     /**
-     * Add query scope.
+     * Get the repository's error messages.
      *
-     * @param \Closure $scope
-     * @return $this
+     * @return \Illuminate\Support\MessageBag
      */
-    public function addScopeQuery(\Closure $scope);
+    public function getErrors();
 }
