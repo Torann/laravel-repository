@@ -42,7 +42,7 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
         $this->repo = $repo;
         $this->cache = $cache;
 
-        $this->cache->getMinutes($this->cacheMinutes);
+        $this->cache->setMinutes($this->cacheMinutes);
     }
 
     /**

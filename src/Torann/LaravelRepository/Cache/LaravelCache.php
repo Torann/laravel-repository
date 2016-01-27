@@ -52,11 +52,21 @@ class LaravelCache implements CacheInterface
     }
 
     /**
+     * Get cache minutes.
+     *
+     * @return int
+     */
+    public function getMinutes()
+    {
+        return $this->minutes;
+    }
+
+    /**
      * Set cache minutes.
      *
      * @param int $minutes
      */
-    public function getMinutes($minutes)
+    public function setMinutes($minutes)
     {
         $this->minutes = $minutes;
     }

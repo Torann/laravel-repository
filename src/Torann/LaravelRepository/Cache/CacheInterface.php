@@ -8,11 +8,18 @@ use Torann\LaravelRepository\Repositories\RepositoryInterface;
 interface CacheInterface
 {
     /**
+     * Get cache minutes.
+     *
+     * @return int
+     */
+    public function getMinutes();
+
+    /**
      * Set cache minutes.
      *
      * @param int $minutes
      */
-    public function getMinutes($minutes);
+    public function setMinutes($minutes);
 
     /**
      * Fire repository event.
