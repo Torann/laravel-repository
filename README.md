@@ -549,4 +549,3 @@ class CacheDecorator extends AbstractCacheDecorator implements UsersInterface
     }
 }
 ```
-
