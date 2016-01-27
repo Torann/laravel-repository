@@ -3,9 +3,10 @@
 namespace Torann\LaravelRepository\Test\Stubs;
 
 use Mockery;
-use Torann\LaravelRepository\Eloquent\Repository;
+use Torann\LaravelRepository\Repositories\AbstractRepository;
+use Torann\LaravelRepository\Repositories\RepositoryInterface;
 
-class TestRepository extends Repository
+class TestRepository extends AbstractRepository implements RepositoryInterface
 {
     public $builderMock;
 
