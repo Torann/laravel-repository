@@ -32,6 +32,9 @@
     }
   },
   "autoload-dev": {
+    "files": [
+      "tests/TestFunctions.php"
+    ],
     "psr-4": {
       "Torann\\LaravelRepository\\Test\\": "tests"
     }
