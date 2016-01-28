@@ -14,7 +14,9 @@ class CleanCacheRepository
     public function handle(RepositoryEventInterface $event)
     {
         if (config('repositories.cache.clean.on.' . $event->getAction(), true)) {
-            $event->getCache()->flush();
+            $cache = $event->getCache();
+
+            $cache->flush($cache->getTags());
         }
     }
 }
