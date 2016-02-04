@@ -70,7 +70,7 @@ return [
          |
          */
 
-        'clean_event' => \Torann\LaravelRepository\Events\RepositoryEntityEvent::class,
+        'clean_event' => \Torann\LaravelRepository\Events\RepositoryEvent::class,
 
         /*
          |--------------------------------------------------------------------------

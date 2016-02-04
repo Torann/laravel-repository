@@ -3,6 +3,7 @@
 namespace Torann\LaravelRepository\Repositories;
 
 use Closure;
+use BadMethodCallException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
@@ -451,9 +452,11 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         // Check for scope method and call
         if (method_exists($this, $scope = 'scope' . ucfirst($method))) {
-            return call_user_func_array([$this, $scope], $parameters) ?: $this;
+            return call_user_func_array([$this, $scope], $parameters);
         }
 
-        return $this;
+        $className = get_class($this);
+
+        throw new BadMethodCallException("Call to undefined method {$className}::{$method}()");
     }
 }
