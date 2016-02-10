@@ -47,6 +47,14 @@ Once installed you need to register the service provider with the application. O
 ]
 ```
 
+### Lumen
+
+For Lumen register the service provider in `bootstrap/app.php`.
+
+``` php
+$app->register(\Torann\LaravelRepository\Providers\RepositoryServiceProvider::class);
+```
+
 ### Publish the configurations
 
 Run this on the command line from the root of your project:
@@ -77,6 +85,7 @@ The following methods are available:
 - with(array $relations)
 - toSql()
 - getErrors()
+- getErrorMessage($default = '')
 
 ### Torann\LaravelRepository\RepositoryFactory
 
