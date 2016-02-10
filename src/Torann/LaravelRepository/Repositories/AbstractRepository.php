@@ -401,6 +401,14 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getErrorMessage($default = '')
+    {
+        return $this->errors->first('message') ?: $default;
+    }
+
+    /**
      * Check if action is authorized.
      *
      * @param  string $ability

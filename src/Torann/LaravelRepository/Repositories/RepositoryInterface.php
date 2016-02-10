@@ -142,4 +142,13 @@ interface RepositoryInterface
      * @return \Illuminate\Support\MessageBag
      */
     public function getErrors();
+
+    /**
+     * Get the repository's first error message.
+     *
+     * @param string $default
+     *
+     * @return string
+     */
+    public function getErrorMessage($default = '');
 }
