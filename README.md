@@ -42,7 +42,7 @@ Once installed you need to register the service provider with the application. O
 ``` php
 'providers' => [
 
-    \Torann\LaravelRepository\RepositoryProvider::class,
+    \Torann\LaravelRepository\Providers\RepositoryServiceProvider::class,
 
 ]
 ```
@@ -52,7 +52,7 @@ Once installed you need to register the service provider with the application. O
 Run this on the command line from the root of your project:
 
 ``` 
-$ php artisan vendor:publish --provider="Torann\LaravelRepository\RepositoryProvider"
+$ php artisan vendor:publish --provider="Torann\LaravelRepository\Providers\RepositoryServiceProvider"
 ```
 
 A configuration file will be publish to `config/repositories.php`.
