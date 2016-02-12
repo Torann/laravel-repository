@@ -184,6 +184,14 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getErrorMessage($default = '')
+    {
+        return $this->repo->getErrorMessage($default);
+    }
+
+    /**
      * Determine if the cache will be skipped
      *
      * @return bool
