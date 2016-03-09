@@ -56,6 +56,13 @@ abstract class AbstractRepository implements RepositoryInterface
     protected $authorization = [];
 
     /**
+     * Order by column and direction pair.
+     *
+     * @var array
+     */
+    protected $orderBy = [];
+
+    /**
      * Create a new Repository instance
      *
      * @throws RepositoryException
@@ -125,7 +132,11 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         $this->query = $this->getNew()->newQuery();
 
-//        $this->applyEagerLoads();
+        // Apply order by
+        foreach ($this->orderBy as $column => $dir) {
+            $this->query->orderBy($column, $dir);
+        }
+
         $this->applyScope();
 
         return $this;
