@@ -56,6 +56,13 @@ abstract class AbstractRepository implements RepositoryInterface
     protected $authorization = [];
 
     /**
+     * Sortable columns
+     *
+     * @return array
+     */
+    protected $sortable = [];
+
+    /**
      * Order by column and direction pair.
      *
      * @var array
@@ -216,6 +223,37 @@ abstract class AbstractRepository implements RepositoryInterface
         }
 
         return $this->query->get($columns);
+    }
+
+    /**
+     * Simple sortable scope.
+     *
+     * @param array $params
+     *
+     * @return mixed
+     */
+    public function scopeSortable(array $params)
+    {
+        return $this->addScopeQuery(function($query) use ($params) {
+            // Get valid sort order
+            $order = strtolower(array_get($params, 'order', 'asc'));
+            $order = in_array($order, ['desc', 'asc']) ? $order : 'asc';
+
+            // Get sort
+            $sort = array_get($params, 'sort', null);
+
+            // Ensure the sort is valid
+            if (!in_array($sort, $this->sortable)) {
+                return $query;
+            }
+
+            // Include the table name
+            if (strpos($sort, '.')) {
+                $sort = $this->modelInstance->getTable() . '.' . $sort;
+            }
+
+            return $query->orderBy($sort, $order);
+        });
     }
 
     /**
