@@ -3,19 +3,38 @@
 namespace Torann\LaravelRepository\Repositories;
 
 use Closure;
-use Illuminate\Support\Facades\Request;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Torann\LaravelRepository\Cache\CacheInterface;
 
 abstract class AbstractCacheDecorator implements RepositoryInterface
 {
+    /**
+     * Cache expires constants
+     */
+    const EXPIRES_END_OF_DAY = 'end_of_day';
+
     /**
      * Repository instance
      *
      * @var RepositoryInterface
      */
     protected $repo;
+
+    /**
+     * Methods to skip when caching.
+     *
+     * @var array
+     */
+    protected $skipCache = [
+        'find',
+        'findBy',
+        'findAllBy',
+        'findWhere',
+        'all',
+        'lists',
+        'paginate',
+    ];
 
     /**
      * Cache instance
@@ -41,8 +60,6 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
     {
         $this->repo = $repo;
         $this->cache = $cache;
-
-        $this->cache->setMinutes($this->cacheMinutes);
     }
 
     /**
@@ -194,11 +211,14 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
     /**
      * Determine if the cache will be skipped
      *
+     * @param string $method
+     *
      * @return bool
      */
-    public function isSkippedCache()
+    public function isSkippedCache($method)
     {
-        return app('request')->get(config('repositories.cache.skipParam', 'skipCache'));
+        return in_array($method, $this->skipCache)
+            || app('request')->get(config('repositories.cache.skipParam', 'skipCache'));
     }
 
     /**
@@ -235,14 +255,33 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
      */
     public function getCache($method, array $args = [], Closure $callback, $time = null)
     {
-        if ($this->isSkippedCache()) {
+        if ($this->isSkippedCache($method)) {
             return $callback($this);
         }
 
         return $this->cache->remember(
             $this->getCacheKey($method, $args),
-            $callback
+            $callback,
+            $this->getCacheExpiresTime($time)
         );
+    }
+
+    /**
+     * Return the time until expires in minutes.
+     *
+     * @param int $time
+     *
+     * @return int
+     */
+    protected function getCacheExpiresTime($time = null)
+    {
+        if ($time === self::EXPIRES_END_OF_DAY) {
+            return class_exists(Carbon::class)
+                ? round(Carbon::now()->secondsUntilEndOfDay() / 60)
+                : $this->cacheMinutes;
+        }
+
+        return $this->cacheMinutes;
     }
 
     /**
