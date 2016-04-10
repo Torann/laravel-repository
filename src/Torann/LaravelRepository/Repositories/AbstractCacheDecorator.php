@@ -195,6 +195,14 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
     /**
      * {@inheritdoc}
      */
+    public function addError($message)
+    {
+        return $this->repo->addError($message);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getErrors()
     {
         return $this->repo->getErrors();
