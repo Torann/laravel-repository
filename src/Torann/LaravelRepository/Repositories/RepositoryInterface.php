@@ -91,6 +91,7 @@ interface RepositoryInterface
      * Save a new entity in repository
      *
      * @param array $attributes
+     *
      * @return Model|bool
      *
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException
@@ -135,6 +136,15 @@ interface RepositoryInterface
      * @return string
      */
     public function toSql();
+
+    /**
+     * Add a message to the repository's error messages.
+     *
+     * @param  string $message
+     *
+     * @return \Illuminate\Support\MessageBag
+     */
+    public function addError($message);
 
     /**
      * Get the repository's error messages.

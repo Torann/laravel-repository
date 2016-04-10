@@ -10,6 +10,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 
 abstract class AbstractRepository implements RepositoryInterface
@@ -150,7 +151,7 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Find data by id
+     * Find data by its primary key.
      *
      * @param  mixed $id
      * @param  array $columns
@@ -165,11 +166,32 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
+     * Find a model by its primary key or throw an exception.
+     *
+     * @para string $id
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function findOrFail($id)
+    {
+        $this->newQuery();
+
+        if ($result = $this->query->find($id)) {
+            return $result;
+        }
+
+        throw (new ModelNotFoundException)->setModel($this->model);
+    }
+
+    /**
      * Find data by field and value
      *
      * @param       $field
      * @param       $value
      * @param array $columns
+     *
      * @return Model|Collection
      */
     public function findBy($field, $value, $columns = ['*'])
@@ -228,19 +250,16 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Simple sortable scope.
      *
-     * @param array $params
+     * @param string $sort
+     * @param string $order
      *
      * @return mixed
      */
-    public function scopeSortable(array $params)
+    public function scopeSortable($sort, $order)
     {
-        return $this->addScopeQuery(function($query) use ($params) {
+        return $this->addScopeQuery(function ($query) use ($sort, $order) {
             // Get valid sort order
-            $order = strtolower(array_get($params, 'order', 'asc'));
-            $order = in_array($order, ['desc', 'asc']) ? $order : 'asc';
-
-            // Get sort
-            $sort = array_get($params, 'sort', null);
+            $order = in_array(strtolower($order), ['desc', 'asc']) ? $order : 'asc';
 
             // Ensure the sort is valid
             if (!in_array($sort, $this->sortable)) {
@@ -248,7 +267,7 @@ abstract class AbstractRepository implements RepositoryInterface
             }
 
             // Include the table name
-            if (strpos($sort, '.')) {
+            if (strpos($sort, '.') === false) {
                 $sort = $this->modelInstance->getTable() . '.' . $sort;
             }
 
@@ -444,6 +463,14 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * {@inheritdoc}
      */
+    public function addError($message)
+    {
+        return $this->errors->add('message', $message);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getErrors()
     {
         return $this->errors;
@@ -486,12 +513,11 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         try {
             return app(Gate::class)->authorize($ability, $arguments);
-        } catch (AuthorizationException $e) {
+        }
+        catch (AuthorizationException $e) {
             $msg = 'This action is unauthorized';
 
-            $this->errors->add('message',
-                $e->getMessage() ?: (function_exists('trans') ? trans("errors.$msg") : $msg)
-            );
+            $this->addError($e->getMessage() ?: (function_exists('trans') ? trans("errors.$msg") : $msg));
 
             return false;
         }
