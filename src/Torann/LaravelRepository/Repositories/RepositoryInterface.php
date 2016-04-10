@@ -142,7 +142,7 @@ interface RepositoryInterface
      *
      * @param  string $message
      *
-     * @return \Illuminate\Support\MessageBag
+     * @return null
      */
     public function addError($message);
 

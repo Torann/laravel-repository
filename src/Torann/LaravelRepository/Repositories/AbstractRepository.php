@@ -465,7 +465,9 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function addError($message)
     {
-        return $this->errors->add('message', $message);
+        $this->errors->add('message', $message);
+
+        return null;
     }
 
     /**
