@@ -239,6 +239,12 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
      */
     public function getCacheKey($method, $args = null)
     {
+        foreach($args as &$a) {
+            if ($a instanceof Model) {
+                $a = get_class($a).'|'.$a->getKey();
+            }
+        }
+        
         $args = serialize($args)
             . serialize($this->repo->getScopeQuery())
             . serialize($this->repo->getWith());
