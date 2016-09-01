@@ -32,7 +32,7 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
         'findAllBy',
         'findWhere',
         'all',
-        'lists',
+        'pluck',
         'paginate',
     ];
 
@@ -123,10 +123,10 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function lists($value, $key = null)
+    public function pluck($value, $key = null)
     {
-        return $this->getCache('lists', func_get_args(), function () use ($value, $key) {
-            return $this->repo->lists($value, $key);
+        return $this->getCache('pluck', func_get_args(), function () use ($value, $key) {
+            return $this->repo->pluck($value, $key);
         });
     }
 

@@ -75,7 +75,7 @@ interface RepositoryInterface
      *
      * @return array
      */
-    public function lists($value, $key = null);
+    public function pluck($value, $key = null);
 
     /**
      * Retrieve all data of repository, paginated

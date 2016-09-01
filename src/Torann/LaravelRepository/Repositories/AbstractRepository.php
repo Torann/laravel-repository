@@ -6,7 +6,6 @@ use Closure;
 use BadMethodCallException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Collection;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -297,11 +296,11 @@ abstract class AbstractRepository implements RepositoryInterface
      *
      * @return array
      */
-    public function lists($value, $key = null)
+    public function pluck($value, $key = null)
     {
         $this->newQuery();
 
-        $lists = $this->query->lists($value, $key);
+        $lists = $this->query->pluck($value, $key);
 
         if (is_array($lists)) {
             return $lists;
@@ -316,7 +315,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param null  $limit
      * @param array $columns
      *
-     * @return Paginator
+     * @return \Illuminate\Pagination\Paginator
      */
     public function paginate($limit = null, $columns = ['*'])
     {
@@ -325,6 +324,23 @@ abstract class AbstractRepository implements RepositoryInterface
         $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
 
         return $this->query->paginate($limit, $columns);
+    }
+
+    /**
+     * Retrieve all data of repository, paginated
+     *
+     * @param null  $limit
+     * @param array $columns
+     *
+     * @return \Illuminate\Pagination\Paginator
+     */
+    public function simplePaginate($limit = null, $columns = ['*'])
+    {
+        $this->newQuery();
+
+        $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
+
+        return $this->query->simplePaginate($limit, $columns);
     }
 
     /**
