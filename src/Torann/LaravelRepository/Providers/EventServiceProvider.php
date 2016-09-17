@@ -2,7 +2,7 @@
 
 namespace Torann\LaravelRepository\Providers;
 
-use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
+//use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -24,8 +24,17 @@ class EventServiceProvider extends ServiceProvider
      * @param  \Illuminate\Contracts\Events\Dispatcher  $events
      * @return void
      */
-    public function boot(DispatcherContract $events)
+    public function boot(/*DispatcherContract $events*/)
     {
-        parent::boot($events);
+        //parent::boot($events);
+        foreach ($this->listens() as $event => $listeners) {
+            foreach ($listeners as $listener) {
+                \Event::listen($event, $listener);
+            }
+        }
+
+        foreach ($this->subscribe as $subscriber) {
+            \Event::subscribe($subscriber);
+        }
     }
 }
