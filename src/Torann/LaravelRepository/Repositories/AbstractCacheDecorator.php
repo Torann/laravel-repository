@@ -295,7 +295,7 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
                 : $this->cacheMinutes;
         }
 
-        return $this->cacheMinutes;
+        return is_null($time) ? $this->cacheMinutes : $time;
     }
 
     /**
