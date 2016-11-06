@@ -16,9 +16,11 @@ class RepositoryFactory
      *
      * @throws Exception
      */
-    public static function create($name)
+    public static function create($name, $namespace = null)
     {
-        $namespace = config('repositories.namespace', '\\App\\Repositories') . "\\{$name}";
+        if (is_null($namespace)) {
+            $namespace = config('repositories.namespace', '\\App\\Repositories') . "\\{$name}";
+        }
         $class = "{$namespace}\\{$name}Repository";
 
         // Ensure repository exists
@@ -40,10 +42,10 @@ class RepositoryFactory
      *
      * @throws Exception
      */
-    public static function createWithCache($name, array $tags = [])
+    public static function createWithCache($name, array $tags = [], $namespaceRepository = null, $namespaceCacheDecorator = null)
     {
         // Create repository instance
-        $repository = self::create($name);
+        $repository = self::create($name, $namespaceRepository);
 
         // Globally turned off
         if (config('repositories.cache.enabled', false) === false) {
@@ -56,7 +58,11 @@ class RepositoryFactory
         }
 
         // Get cache decorator class
-        $class = config('repositories.namespace', '\\App\\Repositories') . "\\{$name}\\CacheDecorator";
+        if (is_null($namespaceCacheDecorator)) {
+            $class = config('repositories.namespace', '\\App\\Repositories') . "\\{$name}\\CacheDecorator";
+        } else {
+            $class = "{$namespaceCacheDecorator}\\{$name}CacheDecorator";
+        }
 
         // Ensure cache decorator exists
         if (class_exists($class) === false) {
