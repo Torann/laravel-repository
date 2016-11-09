@@ -13,15 +13,9 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if ($this->isLumen() === false) {
-            $this->publishes([
-                __DIR__ . '/../../../config/repositories.php' => config_path('repositories.php')
-            ]);
-
-            $this->mergeConfigFrom(
-                __DIR__ . '/../../../config/repositories.php', 'repositories'
-            );
-        }
+        $this->mergeConfigFrom(
+            __DIR__ . '/../../../config/repositories.php', 'repositories'
+        );
     }
 
     /**
@@ -31,12 +25,34 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        if ($this->isLumen() === false) {
-            $this->app->register(\Torann\LaravelRepository\Providers\EventServiceProvider::class);
-        }
-        else {
-            $this->app->register(\Torann\LaravelRepository\Providers\LumenEventServiceProvider::class);
-        }
+        // Determine which service type to register
+        $service = $this->isLumen() ? 'registerLumen' : 'registerLaravel';
+
+        $this->$service();
+    }
+
+    /**
+     * Register the Laravel application services.
+     *
+     * @return void
+     */
+    public function registerLaravel()
+    {
+        $this->app->register(\Torann\LaravelRepository\Providers\EventServiceProvider::class);
+
+        $this->publishes([
+            __DIR__ . '/../../../config/repositories.php' => config_path('repositories.php')
+        ], 'config');
+    }
+
+    /**
+     * Register the Lumen application services.
+     *
+     * @return void
+     */
+    public function registerLumen()
+    {
+        $this->app->register(\Torann\LaravelRepository\Providers\LumenEventServiceProvider::class);
     }
 
     /**
@@ -47,15 +63,5 @@ class RepositoryServiceProvider extends ServiceProvider
     protected function isLumen()
     {
         return str_contains($this->app->version(), 'Lumen') === true;
-    }
-
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return [];
     }
 }
