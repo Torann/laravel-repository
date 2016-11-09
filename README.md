@@ -342,7 +342,7 @@ class UserRepository extends AbstractRepository
     public function findByEmail($email)
     {
         return $this->cacheCallback(__FUNCTION__, func_get_args(), function () use ($email) {
-            $this->query->join('user_emails', 'user_emails.user_id', '=', 'users.id')
+            return $this->query->join('user_emails', 'user_emails.user_id', '=', 'users.id')
                 ->where('user_emails.email', $email)
                 ->first();
         });

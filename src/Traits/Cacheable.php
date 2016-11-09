@@ -14,7 +14,7 @@ trait Cacheable
      *
      * @var CacheManager
      */
-    protected static $cache;
+    protected static $cache = null;
 
     /**
      * Global lifetime of the cache.
@@ -51,8 +51,8 @@ trait Cacheable
     public function skippedCache()
     {
         return self::getCacheInstance() !== null
-            && config('repositories.cache_enabled', false) === true
-            && app('request')->has(config('repositories.cache_skip_param', 'skipCache')) === false;
+            || config('repositories.cache_enabled', false) === false
+            || app('request')->has(config('repositories.cache_skip_param', 'skipCache')) === true;
     }
 
     /**

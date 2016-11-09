@@ -4,13 +4,14 @@ namespace Torann\LaravelRepository\Test\Stubs;
 
 use Mockery;
 use Torann\LaravelRepository\Repositories\AbstractRepository;
-use Torann\LaravelRepository\Repositories\RepositoryInterface;
 
-class TestRepository extends AbstractRepository implements RepositoryInterface
+class TestRepository extends AbstractRepository
 {
     public $builderMock;
 
     protected $authorization = [];
+
+    public $skipCacheCheck = false;
 
     public function makeModel()
     {
@@ -27,8 +28,22 @@ class TestRepository extends AbstractRepository implements RepositoryInterface
 
     public function scopeAdminOnlyScope()
     {
-        return $this->addScopeQuery(function($query) {
+        return $this->addScopeQuery(function ($query) {
             return $query->where('is_admin', true);
+        });
+    }
+
+    public function skippedCache()
+    {
+        if ($this->skipCacheCheck === true) return false;
+
+        return parent::skippedCache();
+    }
+
+    public function findByEmail($email)
+    {
+        return $this->cacheCallback(__FUNCTION__, func_get_args(), function () use ($email) {
+            return $this->query->where('email', $email);
         });
     }
 }

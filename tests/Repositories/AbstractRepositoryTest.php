@@ -25,7 +25,7 @@ class AbstractRepositoryTest extends TestCase
     /**
      * @test
      */
-    public function testLists()
+    public function testPluck()
     {
         $expectedArray = [
             [
@@ -41,10 +41,10 @@ class AbstractRepositoryTest extends TestCase
         $repo = $this->makeRepository();
 
         $repo->builderMock
-            ->shouldReceive('lists')->once()
+            ->shouldReceive('pluck')->once()
             ->andReturn($expectedArray);
 
-        $this->assertEquals($expectedArray, $repo->lists('title', 'name'));
+        $this->assertEquals($expectedArray, $repo->pluck('title', 'name'));
     }
 
     /**
@@ -59,6 +59,20 @@ class AbstractRepositoryTest extends TestCase
             ->andReturn(true);
 
         $this->assertEquals(true, $repo->paginate(11));
+    }
+
+    /**
+     * @test
+     */
+    public function testSimplePaginate()
+    {
+        $repo = $this->makeRepository();
+
+        $repo->builderMock
+            ->shouldReceive('simplePaginate')->once()
+            ->andReturn(true);
+
+        $this->assertEquals(true, $repo->simplePaginate(11));
     }
 
     /**
@@ -222,6 +236,44 @@ class AbstractRepositoryTest extends TestCase
         $this->assertEquals($expectedArray, $repo->findWhere([
             ['id', '<', 123]
         ]));
+    }
+
+    /**
+     * @test
+     */
+    public function testCacheCallbackWithOutCache()
+    {
+        $repo = $this->makeRepository();
+
+        $repo->builderMock
+            ->shouldReceive('where')->once()
+            ->with('email', 'admin@mail.com')->once()
+            ->andReturn('admin@mail.com');
+
+        $this->assertEquals('admin@mail.com', $repo->findByEmail('admin@mail.com'));
+    }
+
+    /**
+     * @test
+     */
+    public function testCacheCallbackWithCache()
+    {
+        $repo = $this->makeRepository();
+
+        $repo->skipCacheCheck = true;
+
+        $cache = app('cache');
+
+        $cache->shouldReceive('tags')->once()
+            ->with(['repositories', 'Torann\\LaravelRepository\\Test\\Stubs\\TestRepository'])->once()
+            ->andReturnSelf();
+
+        $cache->shouldReceive('remember')->once()
+            ->andReturn('admin@mail.com');
+
+        $repo::setCacheInstance($cache);
+
+        $this->assertEquals('admin@mail.com', $repo->findByEmail('admin@mail.com'));
     }
 
     /**
