@@ -25,7 +25,7 @@ class AbstractRepositoryTest extends TestCase
     /**
      * @test
      */
-    public function testLists()
+    public function testPluck()
     {
         $expectedArray = [
             [
@@ -41,10 +41,10 @@ class AbstractRepositoryTest extends TestCase
         $repo = $this->makeRepository();
 
         $repo->builderMock
-            ->shouldReceive('lists')->once()
+            ->shouldReceive('pluck')->once()
             ->andReturn($expectedArray);
 
-        $this->assertEquals($expectedArray, $repo->lists('title', 'name'));
+        $this->assertEquals($expectedArray, $repo->pluck('title', 'name'));
     }
 
     /**
