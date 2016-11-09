@@ -28,7 +28,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Torann\\LaravelRepository\\": "src/Torann/LaravelRepository"
+      "Torann\\LaravelRepository\\": "src/"
     }
   },
   "autoload-dev": {
@@ -41,7 +41,7 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "0.2-dev"
+      "dev-master": "0.4-dev"
     }
   },
   "archive" : {

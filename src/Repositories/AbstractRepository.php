@@ -7,11 +7,20 @@ use BadMethodCallException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Torann\LaravelRepository\Traits\Cacheable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Torann\LaravelRepository\Contracts\RepositoryContract;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 
-abstract class AbstractRepository implements RepositoryInterface
+abstract class AbstractRepository implements RepositoryContract
 {
+    use Cacheable;
+
+    /**
+     * Cache expires constants
+     */
+    const EXPIRES_END_OF_DAY = 'eod';
+
     /**
      * @var \Illuminate\Database\Eloquent\Model
      */
@@ -36,13 +45,6 @@ abstract class AbstractRepository implements RepositoryInterface
      * @var array
      */
     protected $scopeQuery = [];
-
-    /**
-     * The relations to eager load on every query.
-     *
-     * @var array
-     */
-    protected $with = [];
 
     /**
      * Sortable columns
@@ -342,8 +344,6 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         $this->newQuery();
 
-        $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
-
         return $this->query->paginate($limit, $columns);
     }
 
@@ -358,8 +358,6 @@ abstract class AbstractRepository implements RepositoryInterface
     public function simplePaginate($limit = null, $columns = ['*'])
     {
         $this->newQuery();
-
-        $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
 
         return $this->query->simplePaginate($limit, $columns);
     }
@@ -410,20 +408,6 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Load relations
-     *
-     * @param array $relations
-     *
-     * @return $this
-     */
-    public function with(array $relations)
-    {
-        $this->with[] = $relations;
-
-        return $this;
-    }
-
-    /**
      * Create model instance.
      *
      * @return \Illuminate\Database\Eloquent\Builder
@@ -448,16 +432,6 @@ abstract class AbstractRepository implements RepositoryInterface
         $this->newQuery();
 
         return $this->query->toSql();
-    }
-
-    /**
-     * Return relations array.
-     *
-     * @return array
-     */
-    public function getWith()
-    {
-        return $this->with;
     }
 
     /**

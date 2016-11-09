@@ -16,7 +16,6 @@ The Laravel Repository package is meant to be a generic repository implementatio
   - [Composer](#composer)
   - [Laravel](#laravel)
 - [Methods](#methods)
-  - [RepositoryInterface](#torannlaravelrepositorycontractsrepositoryinterface)
 - [Usage](#usage)
   - [Create a Model](#create-a-model)
   - [Create a Repository](#create-a-repository)
@@ -27,7 +26,6 @@ The Laravel Repository package is meant to be a generic repository implementatio
 - [Cache](#cache)
   - [Usage](#cache-usage)
   - [Config](#cache-config)
-- [Authorization](#authorization)
 - [Laravel Repository on Packagist](https://packagist.org/packages/torann/laravel-repository)
 - [Laravel Repository on GitHub](https://github.com/torann/laravel-repository)
 
@@ -41,32 +39,34 @@ From the command line run:
 $ composer require torann/laravel-repository
 ```
 
-### Laravel
+> **NOTE** The Service Provider and configuration file is not required for regular use. It is only required when using the [caching](#cache) feature.
+
+### Laravel (optional)
 
 Once installed you need to register the service provider with the application. Open up `config/app.php` and find the `providers` key.
 
 ``` php
 'providers' => [
 
-    \Torann\LaravelRepository\Providers\RepositoryServiceProvider::class,
+    \Torann\LaravelRepository\RepositoryServiceProvider::class,
 
 ]
 ```
 
-### Lumen
+### Lumen (optional)
 
 For Lumen register the service provider in `bootstrap/app.php`.
 
 ``` php
-$app->register(\Torann\LaravelRepository\Providers\RepositoryServiceProvider::class);
+$app->register(\Torann\LaravelRepository\RepositoryServiceProvider::class);
 ```
 
-### Publish the configurations
+### Publish the configurations (optional)
 
 Run this on the command line from the root of your project:
 
 ``` 
-$ php artisan vendor:publish --provider="Torann\LaravelRepository\Providers\RepositoryServiceProvider"
+$ php artisan vendor:publish --provider="Torann\LaravelRepository\RepositoryServiceProvider" --tag=config
 ```
 
 A configuration file will be publish to `config/repositories.php`.
@@ -75,7 +75,7 @@ A configuration file will be publish to `config/repositories.php`.
 
 The following methods are available:
 
-### Torann\LaravelRepository\Repositories\RepositoryInterface
+### Torann\LaravelRepository\Contracts\RepositoryContract
 
 - getModel()
 - find($id, $columns = ['*'])
@@ -85,51 +85,14 @@ The following methods are available:
 - all($columns = ['*'])
 - lists($value, $key = null)
 - paginate($limit = null, $columns = ['*'])
+- simplePaginate($limit = null, $columns = ['*'])
 - create(array $attributes)
 - update(Model $entity, array $attributes)
 - delete($entity)
-- with(array $relations)
 - toSql()
 - getErrors()
 - getErrorMessage($default = '')
-
-### Torann\LaravelRepository\RepositoryFactory
-
-- create($name)
-- createWithCache($name, array $tags = [])
-
-### Torann\LaravelRepository\Repositories\AbstractCacheDecorator
-
-- getModel()
-- find($id, $columns = ['*'])
-- findBy($field, $value, $columns = ['*'])
-- findAllBy($attribute, $value, $columns = ['*'])
-- findWhere(array $where, $columns = ['*'])
-- all($columns = ['*'])
-- lists($value, $key = null)
-- paginate($limit = null, $columns = ['*'])
-- create(array $attributes)
-- update(Model $entity, array $attributes)
-- delete($entity)
-- with(array $relations)
-- toSql()
-- getErrors()
-- isSkippedCache()
-- getCache($method, array $args = [], Closure $callback, $time = null)
-
-## Basic Setup
-
-The following example will be for a User repository using the default namespace for all repositories `\App\Repositories\`, this can be changed in the configuration file. 
-
-Bellow is the naming scheme for a user repository located `\App\Repositories\Users`:
-
-| Name            | Description                              |
-| --------------- | ---------------------------------------- |
-| UsersRepository | The main model repository                |
-| UsersInterface  | Repository interface                     |
-| CacheDecorator  | Cache decorator used for caching repository methods |
-
-As you can see the repository and interface are prefixed with _User_, the name of the repository.
+- cacheCallback($method, $args, Closure $callback, $time = null)
 
 ### Create a Model
 
@@ -154,31 +117,16 @@ class User extends Model
 }
 ```
 
-### Create Repository Interface
-
-``` php
-<?php
-
-namespace App\Repositories\Users;
-
-use Torann\LaravelRepository\Repositories\RepositoryInterface;
-
-interface UsersInterface extends RepositoryInterface
-{
-    //
-}
-```
-
 ### Create a Repository
 
 ``` php
 <?php
 
-namespace App\Repositories\Users;
+namespace App\Repositories;
 
 use Torann\LaravelRepository\Repositories\AbstractRepository;
 
-class UsersRepository extends AbstractRepository implements UsersInterface
+class UsersRepository extends AbstractRepository
 {
     /**
      * Specify Model class name
@@ -189,34 +137,6 @@ class UsersRepository extends AbstractRepository implements UsersInterface
 }
 ```
 
-### Register the Repository
-
-Using the provided `RepositoryFactory`, we can quickly instantiate our repository. The factory class uses the namespace provided in the configuration file to find the repository. The reason for the factory class is to help keep the repository service provider slim, especially when we get into cache decorators.
-
-``` php
-<?php
-
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-use Torann\LaravelRepository\RepositoryFactory;
-
-class RepositoriesServiceProvider extends ServiceProvider
-{
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        $this->app->bind('App\Repositories\Users\UsersInterface', function ($app) {
-            return RepositoryFactory::create('Users');
-        });
-    }
-}
-```
-
 ### Use in a Controller
 
 ``` php
@@ -224,16 +144,16 @@ class RepositoriesServiceProvider extends ServiceProvider
 
 namespace App\Http\Controllers;
 
-use App\Repositories\Users\UsersInterface;
+use App\Repositories\UserRepository;
 
 class UsersController extends Controller
 {
     /**
-     * @var UsersInterface
+     * @var UserRepository
      */
     protected $repository;
 
-    public function __construct(UsersInterface $repository)
+    public function __construct(UserRepository $repository)
     {
         $this->repository = $repository;
     }
@@ -320,11 +240,11 @@ Scopes are a way to change the repository of the query by applying specific cond
 ``` php
 <?php
 
-namespace App\Repositories\Users;
+namespace App\Repositories;
 
 use Torann\LaravelRepository\Repositories\AbstractRepository;
 
-class UsersRepository extends AbstractRepository implements UsersInterface
+class UsersRepository extends AbstractRepository
 {
     /**
      * Specify Model class name
@@ -354,21 +274,21 @@ class UsersRepository extends AbstractRepository implements UsersInterface
 
 namespace App\Http\Controllers;
 
-use App\Repositories\Users\UsersInterface;
+use App\Repositories\UserRepository;
 
 class UsersController extends Controller
 {
     /**
-     * @var UsersInterface
+     * @var UserRepository
      */
     protected $repository;
 
     /**
      * Create a new Controller instance.
      *
-     * @param UsersInterface $repository
+     * @param UserRepository $repository
      */
-    public function __construct(UsersInterface $repository)
+    public function __construct(UserRepository $repository)
     {
         $this->repository = $repository;
     }
@@ -387,107 +307,66 @@ class UsersController extends Controller
 }
 ```
 
-## Authorization
+## Cache
 
-Out of the box your repositories can support Laravel's build in authorization checks when a **create**, **update**, or **delete** method is performed. You may specify a what is authorized by defining it in the `authorization` property on your repository:
+> **Note**: Caching uses [Cache Tags](http://laravel.com/docs/master/cache#cache-tags), so caching is not supported when using the `file` or `database` cache drivers. This makes the Laravel Repository super scalable.
+
+Caching is meant more for custom repository methods. Standard `find`, `paginate`, `all` and so on do not use caching. The reason for this is that I believe caching should be for more complex queries, such as those that join multiple tables. For such a case we use the following code in our method:
+
+```php
+return $this->cacheCallback(__FUNCTION__, func_get_args(), function () use ($id, $columns) {
+    return $this->query->find($id, $columns);
+});
+```
+
+#### Example
+
+This is just a simple example of how caching could work for you.
 
 ``` php
 <?php
 
-namespace App\Repositories\Users;
+namespace App\Repositories;
 
 use Torann\LaravelRepository\Repositories\AbstractRepository;
 
-class UsersRepository extends AbstractRepository implements UsersInterface
+class UserRepository extends AbstractRepository
 {
     /**
-     * Specify Model class name
+     * Find user by thier email.
      *
-     * @return string
-     */
-    protected $model = \App\User::class;
-  
-    /**
-     * Array of actions that require authorization.
+     * @param mixed $id
      *
-     * @var array
+     * @return Model|Collection
      */
-    protected $authorization = [
-        'create',
-        'update',
-        'destroy',
-    ];
-}
-```
-
-When an authorization fails the method will return `false`. To get the error message bag simple call `getErrors()` on your repository.
-
-## Cache
-
-Add a layer of cache easily to your repository by using the a cache decorator.
-
-#### Cache Usage
-
-> **Note**: Caching uses [Cache Tags](http://laravel.com/docs/5.1/cache#cache-tags), so caching is not supported when using the `file` or `database` cache drivers. This makes the Laravel Repository super scalable.
-
-We will create a cache decorator for our repository `App\Repositories\Users\UsersRepository` from the [Basic Setup](#basic-setup) section. **Note:** you must implement you `UsersInterface` on the decorator.
-
-``` php
-<?php
-
-namespace App\Repositories\Users;
-
-use Torann\LaravelRepository\Repositories\AbstractCacheDecorator;
-
-class CacheDecorator extends AbstractCacheDecorator implements UsersInterface
-{
-    ...
-}
-```
-
-Before our repository is cached we must update the repository service provider so that it will use the `createWithCache` method:
-
-``` php
-<?php
-
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-use Torann\LaravelRepository\RepositoryFactory;
-
-class RepositoriesServiceProvider extends ServiceProvider
-{
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
+    public function findByEmail($email)
     {
-        $this->app->bind('App\Repositories\Users\UsersInterface', function ($app) {
-            return RepositoryFactory::createWithCache('Users');
+        return $this->cacheCallback(__FUNCTION__, func_get_args(), function () use ($email) {
+            $this->query->join('user_emails', 'user_emails.user_id', '=', 'users.id')
+                ->where('user_emails.email', $email)
+                ->first();
         });
     }
 }
 ```
 
-Done, your repository will be cached and the repository cache is cleared whenever an item is created, modified or deleted.
+And that's it! Now we just call
 
 ``` php
 <?php
 
 namespace App\Http\Controllers;
 
-use App\Repositories\Users\UsersInterface;
+use App\Repositories\UserRepository;
 
 class UsersController extends Controller
 {
     /**
-     * @var UsersInterface
+     * @var UserRepository
      */
     protected $repository;
 
-    public function __construct(UsersInterface $repository)
+    public function __construct(UserRepository $repository)
     {
         $this->repository = $repository;
     }
@@ -499,9 +378,9 @@ class UsersController extends Controller
      */
     public function index()
     {
-        $users = $this->repository->all();
+        $user = $this->repository->findByEmail('foo@bar.com');
 
-        return \Response::json($users);
+        return \Response::json($user);
     }
 }
 ```
@@ -512,55 +391,24 @@ The repository cache is cleared whenever an item is created, modified or deleted
 
 Enabling and disabling the cache globally can be done in the settings file `config/repositories.php`.
 
-It is possible to override the default settings directly in the repository.
+It is also possible to override the default settings directly in the repository.
 
 ``` php
 <?php
 
-namespace App\Repositories\Users;
+namespace App\Repositories;
 
-use Torann\LaravelRepository\Repositories\AbstractCacheDecorator;
+use Torann\LaravelRepository\Repositories\AbstractRepository;
 
-class CacheDecorator extends AbstractCacheDecorator implements UsersInterface
+class UserRepository extends AbstractRepository
 {
     /**
      * Lifetime of the cache.
      *
      * @var int
      */
-    protected $cacheMinutes = 30;
+    protected $cacheMinutes = 10;
 
     ...
-}
-```
-
-The cacheable methods are: `all`, `lists`, `paginate`, `find`, `findBy`, `findAllBy`, and `findWhere`.
-
-### Caching Custom Methods
-
-This is a quick example showing how to cache a custom repository method called `getRecent`
-
-``` php
-<?php
-
-namespace App\Repositories\Users;
-
-use Torann\LaravelRepository\Repositories\AbstractCacheDecorator;
-
-class CacheDecorator extends AbstractCacheDecorator implements UsersInterface
-{
-    /**
-     * Get recent users and cache array
-     *
-     * @param  int $limit
-     *
-     * @return null|\Illuminate\Support\Collection
-     */
-    public function getRecent($limit = 15)
-    {
-        return $this->getCache('getRecent', func_get_args(), function () use ($limit) {
-            return $this->repo->getRecent($limit);
-        });
-    }
 }
 ```

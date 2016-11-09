@@ -1,13 +1,13 @@
 <?php
 
-namespace Torann\LaravelRepository\Repositories;
+namespace Torann\LaravelRepository\Contracts;
 
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 
-interface RepositoryInterface
+interface RepositoryContract
 {
     /**
      * Return model instance.
@@ -156,15 +156,6 @@ interface RepositoryInterface
      * @throws \Exception
      */
     public function delete($entity);
-
-    /**
-     * Load relations
-     *
-     * @param array $relations
-     *
-     * @return $this
-     */
-    public function with(array $relations);
 
     /**
      * Get the raw SQL statements for the request
