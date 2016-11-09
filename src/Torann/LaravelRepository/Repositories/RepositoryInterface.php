@@ -19,18 +19,29 @@ interface RepositoryInterface
     /**
      * Find data by id
      *
-     * @param  mixed $id
-     * @param  array $columns
+     * @param mixed $id
+     * @param array $columns
      *
      * @return Model|Collection
      */
     public function find($id, $columns = ['*']);
 
     /**
+     * Find a model by its primary key or throw an exception.
+     *
+     * @para string $id
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function findOrFail($id);
+
+    /**
      * Find data by field and value
      *
-     * @param       $field
-     * @param       $value
+     * @param      $field
+     * @param      $value
      * @param array $columns
      *
      * @return Model|Collection
@@ -59,6 +70,25 @@ interface RepositoryInterface
     public function findWhere(array $where, $columns = ['*']);
 
     /**
+     * Order results by.
+     *
+     * @param string $sort
+     * @param string $order
+     *
+     * @return self
+     */
+    public function scopeSortable($sort, $order);
+
+    /**
+     * Filter results by given query params.
+     *
+     * @param string $queries
+     *
+     * @return self
+     */
+    public function scopeSearch($queries);
+
+    /**
      * Retrieve all data of repository
      *
      * @param array $columns
@@ -70,8 +100,8 @@ interface RepositoryInterface
     /**
      * Get an array with the values of a given column.
      *
-     * @param  string $value
-     * @param  string $key
+     * @param string $value
+     * @param string $key
      *
      * @return array
      */
@@ -88,36 +118,42 @@ interface RepositoryInterface
     public function paginate($limit = null, $columns = ['*']);
 
     /**
+     * Retrieve all data of repository, paginated
+     *
+     * @param null  $limit
+     * @param array $columns
+     *
+     * @return \Illuminate\Pagination\Paginator
+     */
+    public function simplePaginate($limit = null, $columns = ['*']);
+
+    /**
      * Save a new entity in repository
      *
      * @param array $attributes
      *
      * @return Model|bool
-     *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
     public function create(array $attributes);
 
     /**
      * Update an entity with the given attributes and persist it
      *
-     * @param  Model $entity
-     * @param  array $attributes
+     * @param Model $entity
+     * @param array $attributes
      *
      * @return bool
-     *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      */
     public function update(Model $entity, array $attributes);
 
     /**
      * Delete a entity in repository
      *
-     * @param  mixed $entity
+     * @param mixed $entity
      *
-     * @return int
+     * @return bool|null
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     * @throws \Exception
      */
     public function delete($entity);
 
@@ -140,7 +176,7 @@ interface RepositoryInterface
     /**
      * Add a message to the repository's error messages.
      *
-     * @param  string $message
+     * @param string $message
      *
      * @return null
      */

@@ -7,8 +7,6 @@ use BadMethodCallException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Auth\Access\Gate;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 
@@ -47,20 +45,18 @@ abstract class AbstractRepository implements RepositoryInterface
     protected $with = [];
 
     /**
-     * Array of actions that require authorization.
-     *
-     * Only `create`, `update`, and `destroy` are supported
-     *
-     * @var array
-     */
-    protected $authorization = [];
-
-    /**
      * Sortable columns
      *
      * @return array
      */
     protected $sortable = [];
+
+    /**
+     * Searchable columns
+     *
+     * @return array
+     */
+    protected $searchable = [];
 
     /**
      * Order by column and direction pair.
@@ -79,9 +75,6 @@ abstract class AbstractRepository implements RepositoryInterface
         $this->makeModel();
         $this->scopeReset();
         $this->boot();
-
-        // Lumen fix for authorization
-        $this->authorization = config('auth') === null ? [] : $this->authorization;
     }
 
     /**
@@ -119,7 +112,7 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Get a new entity instance
      *
-     * @param  array $attributes
+     * @param array $attributes
      *
      * @return  \Illuminate\Database\Eloquent\Model
      */
@@ -152,8 +145,8 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Find data by its primary key.
      *
-     * @param  mixed $id
-     * @param  array $columns
+     * @param mixed $id
+     * @param array $columns
      *
      * @return Model|Collection
      */
@@ -187,8 +180,8 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Find data by field and value
      *
-     * @param       $field
-     * @param       $value
+     * @param      $field
+     * @param      $value
      * @param array $columns
      *
      * @return Model|Collection
@@ -247,12 +240,12 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Simple sortable scope.
+     * Order results by.
      *
      * @param string $sort
      * @param string $order
      *
-     * @return mixed
+     * @return self
      */
     public function scopeSortable($sort, $order)
     {
@@ -275,6 +268,34 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
+     * Filter results by given query params.
+     *
+     * @param string $queries
+     *
+     * @return self
+     */
+    public function scopeSearch($queries)
+    {
+        return $this->addScopeQuery(function ($query) use ($queries) {
+
+            // Get table name for search
+            $table = $this->modelInstance->getTable();
+
+            foreach ($this->searchable as $key) {
+
+                // Append table prefix if not already present
+                if (strpos($key, '.') !== false) {
+                    $key = $table . '.' . $key;
+                }
+
+                $query->where($key, 'LIKE', '%' . $queries . '%');
+            }
+
+            return $query;
+        });
+    }
+
+    /**
      * Retrieve all data of repository
      *
      * @param array $columns
@@ -291,8 +312,8 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Get an array with the values of a given column.
      *
-     * @param  string $value
-     * @param  string $key
+     * @param string $value
+     * @param string $key
      *
      * @return array
      */
@@ -344,35 +365,40 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Save a new entity in repository
+     *
+     * @param array $attributes
+     *
+     * @return Model|bool
      */
     public function create(array $attributes)
     {
         $entity = $this->getNew($attributes);
 
-        // Check authorization
-        if ($this->isAuthorized('create', $entity) === false) {
-            return false;
-        }
-
         return $entity->save() ? $entity : false;
     }
 
     /**
-     * {@inheritdoc}
+     * Update an entity with the given attributes and persist it
+     *
+     * @param Model $entity
+     * @param array $attributes
+     *
+     * @return bool
      */
     public function update(Model $entity, array $attributes)
     {
-        // Check authorization
-        if ($this->isAuthorized('update', $entity) === false) {
-            return false;
-        }
-
         return $entity->update($attributes);
     }
 
     /**
-     * {@inheritdoc}
+     * Delete a entity in repository
+     *
+     * @param mixed $entity
+     *
+     * @return bool|null
+     *
+     * @throws \Exception
      */
     public function delete($entity)
     {
@@ -380,16 +406,15 @@ abstract class AbstractRepository implements RepositoryInterface
             $entity = $this->find($entity);
         }
 
-        // Check authorization
-        if ($this->isAuthorized('destroy', $entity) === false) {
-            return false;
-        }
-
         return $entity->delete();
     }
 
     /**
-     * {@inheritdoc}
+     * Load relations
+     *
+     * @param array $relations
+     *
+     * @return $this
      */
     public function with(array $relations)
     {
@@ -414,7 +439,9 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get the raw SQL statements for the request
+     *
+     * @return string
      */
     public function toSql()
     {
@@ -477,7 +504,11 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Add a message to the repository's error messages.
+     *
+     * @param string $message
+     *
+     * @return null
      */
     public function addError($message)
     {
@@ -487,7 +518,9 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get the repository's error messages.
+     *
+     * @return \Illuminate\Support\MessageBag
      */
     public function getErrors()
     {
@@ -495,7 +528,11 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get the repository's first error message.
+     *
+     * @param string $default
+     *
+     * @return string
      */
     public function getErrorMessage($default = '')
     {
@@ -503,49 +540,10 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Check if action is authorized.
-     *
-     * @param  string $ability
-     * @param  Model  $entity
-     *
-     * @return bool
-     */
-    public function isAuthorized($ability, $entity)
-    {
-        if (!in_array($ability, $this->authorization)) {
-            return true;
-        }
-
-        return $this->authorize($ability, $entity);
-    }
-
-    /**
-     * Authorize a given action against a set of arguments.
-     *
-     * @param  string $ability
-     * @param  mixed  $arguments
-     *
-     * @return bool
-     */
-    public function authorize($ability, $arguments = [])
-    {
-        try {
-            return app(Gate::class)->authorize($ability, $arguments);
-        }
-        catch (AuthorizationException $e) {
-            $msg = 'This action is unauthorized';
-
-            $this->addError($e->getMessage() ?: (function_exists('trans') ? trans("errors.$msg") : $msg));
-
-            return false;
-        }
-    }
-
-    /**
      * Handle dynamic static method calls into the method.
      *
-     * @param  string $method
-     * @param  array  $parameters
+     * @param string $method
+     * @param array  $parameters
      *
      * @return mixed
      */
