@@ -72,12 +72,12 @@ interface RepositoryContract
     /**
      * Order results by.
      *
-     * @param string $sort
-     * @param string $order
+     * @param string $column
+     * @param string $direction
      *
      * @return self
      */
-    public function sortable($sort, $order);
+    public function orderBy($column, $direction);
 
     /**
      * Filter results by given query params.

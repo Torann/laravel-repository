@@ -49,21 +49,21 @@ abstract class AbstractRepository implements RepositoryContract
     protected $scopeQuery = [];
 
     /**
-     * Sortable columns
+     * Valid orderable columns.
      *
      * @return array
      */
-    protected $sortable = [];
+    protected $orderable = [];
 
     /**
-     * Searchable columns
+     * Valid searchable columns
      *
      * @return array
      */
     protected $searchable = [];
 
     /**
-     * Order by column and direction pair.
+     * Default order by column and direction pairs.
      *
      * @var array
      */
@@ -200,9 +200,9 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find data by field
      *
-     * @param mixed $attribute
-     * @param mixed $value
-     * @param array $columns
+     * @param string $attribute
+     * @param mixed  $value
+     * @param array  $columns
      *
      * @return mixed
      */
@@ -246,24 +246,29 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Order results by.
      *
-     * @param string $sort
-     * @param string $order
+     * @param string $column
+     * @param string $direction
      *
      * @return self
      */
-    public function sortable($sort, $order)
+    public function orderBy($column, $direction)
     {
-        return $this->addScopeQuery(function ($query) use ($sort, $order) {
+        return $this->addScopeQuery(function ($query) use ($column, $direction) {
+
             // Get valid sort order
-            $order = in_array(strtolower($order), ['desc', 'asc']) ? $order : 'asc';
+            $direction = in_array(strtolower($direction), ['desc', 'asc']) ? $direction : 'asc';
 
             // Ensure the sort is valid
-            if (!in_array($sort, $this->sortable)) {
+            if (in_array($column, $this->orderable) === false
+                && array_key_exists($column, $this->orderable) === false
+            ) {
                 return $query;
             }
 
+            // Check for table column mask
+            $column = Arr::get($this->orderable, $column, $column);
 
-            return $query->orderBy($this->appendTableName($sort), $order);
+            return $query->orderBy($this->appendTableName($column), $direction);
         });
     }
 
