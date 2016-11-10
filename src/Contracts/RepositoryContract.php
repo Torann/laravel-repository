@@ -77,7 +77,7 @@ interface RepositoryContract
      *
      * @return self
      */
-    public function scopeSortable($sort, $order);
+    public function sortable($sort, $order);
 
     /**
      * Filter results by given query params.
@@ -86,7 +86,7 @@ interface RepositoryContract
      *
      * @return self
      */
-    public function scopeSearch($queries);
+    public function search($queries);
 
     /**
      * Retrieve all data of repository

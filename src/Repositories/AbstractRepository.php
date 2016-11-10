@@ -4,9 +4,11 @@ namespace Torann\LaravelRepository\Repositories;
 
 use Closure;
 use BadMethodCallException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Torann\LaravelRepository\Traits\Cacheable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Torann\LaravelRepository\Contracts\RepositoryContract;
@@ -182,9 +184,9 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find data by field and value
      *
-     * @param      $field
-     * @param      $value
-     * @param array $columns
+     * @param string $field
+     * @param string $value
+     * @param array  $columns
      *
      * @return Model|Collection
      */
@@ -249,7 +251,7 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @return self
      */
-    public function scopeSortable($sort, $order)
+    public function sortable($sort, $order)
     {
         return $this->addScopeQuery(function ($query) use ($sort, $order) {
             // Get valid sort order
@@ -260,37 +262,53 @@ abstract class AbstractRepository implements RepositoryContract
                 return $query;
             }
 
-            // Include the table name
-            if (strpos($sort, '.') === false) {
-                $sort = $this->modelInstance->getTable() . '.' . $sort;
-            }
 
-            return $query->orderBy($sort, $order);
+            return $query->orderBy($this->appendTableName($sort), $order);
         });
     }
 
     /**
      * Filter results by given query params.
      *
-     * @param string $queries
+     * @param string|array $queries
      *
      * @return self
      */
-    public function scopeSearch($queries)
+    public function search($queries)
     {
+        // Adjust for simple search queries
+        if (is_string($queries)) {
+            $queries = [
+                'query' => $queries,
+            ];
+        }
+
         return $this->addScopeQuery(function ($query) use ($queries) {
 
-            // Get table name for search
-            $table = $this->modelInstance->getTable();
+            foreach ($this->searchable as $param => $columns) {
 
-            foreach ($this->searchable as $key) {
+                // It doesn't always have to map to something
+                $param = is_numeric($param) ? $columns : $param;
 
-                // Append table prefix if not already present
-                if (strpos($key, '.') !== false) {
-                    $key = $table . '.' . $key;
+                // Get param value
+                $value = Arr::get($queries, $param, '');
+
+                // Validate value
+                if ($value === '' || $value === null) continue;
+
+                // Columns should be an array
+                $columns = (array)$columns;
+
+                if (count($columns) > 1) {
+                    $query->where(function ($q) use ($columns, $param, $value) {
+                        foreach ($columns as $column) {
+                            $this->createSearchClause($q, $param, $column, $value, 'or');
+                        }
+                    });
                 }
-
-                $query->where($key, 'LIKE', '%' . $queries . '%');
+                else {
+                    $this->createSearchClause($query, $param, $columns[0], $value);
+                }
             }
 
             return $query;
@@ -511,6 +529,40 @@ abstract class AbstractRepository implements RepositoryContract
     public function getErrorMessage($default = '')
     {
         return $this->errors->first('message') ?: $default;
+
+    }
+
+    /**
+     * Append table name to column.
+     *
+     * @param string $column
+     *
+     * @return string
+     */
+    protected function appendTableName($column)
+    {
+        return (strpos($column, '.') === false)
+            ? $this->modelInstance->getTable() . '.' . $column
+            : $column;
+    }
+
+    /**
+     * Add a search where clause to the query.
+     *
+     * @param Builder $query
+     * @param string  $param
+     * @param string  $column
+     * @param string  $value
+     * @param string  $boolean
+     */
+    protected function createSearchClause(Builder $query, $param, $column, $value, $boolean = 'and')
+    {
+        if ($param === 'query') {
+            $query->where($this->appendTableName($column), 'LIKE', '%' . $value . '%', $boolean);
+        }
+        else {
+            $query->where($this->appendTableName($column), '=', $value, $boolean);
+        }
     }
 
     /**
