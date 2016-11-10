@@ -4,16 +4,25 @@ namespace Torann\LaravelRepository\Repositories;
 
 use Closure;
 use BadMethodCallException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Auth\Access\Gate;
-use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
+use Torann\LaravelRepository\Traits\Cacheable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Torann\LaravelRepository\Contracts\RepositoryContract;
 use Torann\LaravelRepository\Exceptions\RepositoryException;
 
-abstract class AbstractRepository implements RepositoryInterface
+abstract class AbstractRepository implements RepositoryContract
 {
+    use Cacheable;
+
+    /**
+     * Cache expires constants
+     */
+    const EXPIRES_END_OF_DAY = 'eod';
+
     /**
      * @var \Illuminate\Database\Eloquent\Model
      */
@@ -40,30 +49,21 @@ abstract class AbstractRepository implements RepositoryInterface
     protected $scopeQuery = [];
 
     /**
-     * The relations to eager load on every query.
-     *
-     * @var array
-     */
-    protected $with = [];
-
-    /**
-     * Array of actions that require authorization.
-     *
-     * Only `create`, `update`, and `destroy` are supported
-     *
-     * @var array
-     */
-    protected $authorization = [];
-
-    /**
-     * Sortable columns
+     * Valid orderable columns.
      *
      * @return array
      */
-    protected $sortable = [];
+    protected $orderable = [];
 
     /**
-     * Order by column and direction pair.
+     * Valid searchable columns
+     *
+     * @return array
+     */
+    protected $searchable = [];
+
+    /**
+     * Default order by column and direction pairs.
      *
      * @var array
      */
@@ -79,9 +79,6 @@ abstract class AbstractRepository implements RepositoryInterface
         $this->makeModel();
         $this->scopeReset();
         $this->boot();
-
-        // Lumen fix for authorization
-        $this->authorization = config('auth') === null ? [] : $this->authorization;
     }
 
     /**
@@ -119,7 +116,7 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Get a new entity instance
      *
-     * @param  array $attributes
+     * @param array $attributes
      *
      * @return  \Illuminate\Database\Eloquent\Model
      */
@@ -152,8 +149,8 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Find data by its primary key.
      *
-     * @param  mixed $id
-     * @param  array $columns
+     * @param mixed $id
+     * @param array $columns
      *
      * @return Model|Collection
      */
@@ -187,9 +184,9 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Find data by field and value
      *
-     * @param       $field
-     * @param       $value
-     * @param array $columns
+     * @param string $field
+     * @param string $value
+     * @param array  $columns
      *
      * @return Model|Collection
      */
@@ -203,9 +200,9 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Find data by field
      *
-     * @param mixed $attribute
-     * @param mixed $value
-     * @param array $columns
+     * @param string $attribute
+     * @param mixed  $value
+     * @param array  $columns
      *
      * @return mixed
      */
@@ -247,30 +244,79 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Simple sortable scope.
+     * Order results by.
      *
-     * @param string $sort
-     * @param string $order
+     * @param string $column
+     * @param string $direction
      *
-     * @return mixed
+     * @return self
      */
-    public function scopeSortable($sort, $order)
+    public function orderBy($column, $direction)
     {
-        return $this->addScopeQuery(function ($query) use ($sort, $order) {
+        return $this->addScopeQuery(function ($query) use ($column, $direction) {
+
             // Get valid sort order
-            $order = in_array(strtolower($order), ['desc', 'asc']) ? $order : 'asc';
+            $direction = in_array(strtolower($direction), ['desc', 'asc']) ? $direction : 'asc';
 
             // Ensure the sort is valid
-            if (!in_array($sort, $this->sortable)) {
+            if (in_array($column, $this->orderable) === false
+                && array_key_exists($column, $this->orderable) === false
+            ) {
                 return $query;
             }
 
-            // Include the table name
-            if (strpos($sort, '.') === false) {
-                $sort = $this->modelInstance->getTable() . '.' . $sort;
+            // Check for table column mask
+            $column = Arr::get($this->orderable, $column, $column);
+
+            return $query->orderBy($this->appendTableName($column), $direction);
+        });
+    }
+
+    /**
+     * Filter results by given query params.
+     *
+     * @param string|array $queries
+     *
+     * @return self
+     */
+    public function search($queries)
+    {
+        // Adjust for simple search queries
+        if (is_string($queries)) {
+            $queries = [
+                'query' => $queries,
+            ];
+        }
+
+        return $this->addScopeQuery(function ($query) use ($queries) {
+
+            foreach ($this->searchable as $param => $columns) {
+
+                // It doesn't always have to map to something
+                $param = is_numeric($param) ? $columns : $param;
+
+                // Get param value
+                $value = Arr::get($queries, $param, '');
+
+                // Validate value
+                if ($value === '' || $value === null) continue;
+
+                // Columns should be an array
+                $columns = (array)$columns;
+
+                if (count($columns) > 1) {
+                    $query->where(function ($q) use ($columns, $param, $value) {
+                        foreach ($columns as $column) {
+                            $this->createSearchClause($q, $param, $column, $value, 'or');
+                        }
+                    });
+                }
+                else {
+                    $this->createSearchClause($query, $param, $columns[0], $value);
+                }
             }
 
-            return $query->orderBy($sort, $order);
+            return $query;
         });
     }
 
@@ -291,8 +337,8 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Get an array with the values of a given column.
      *
-     * @param  string $value
-     * @param  string $key
+     * @param string $value
+     * @param string $key
      *
      * @return array
      */
@@ -321,8 +367,6 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         $this->newQuery();
 
-        $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
-
         return $this->query->paginate($limit, $columns);
     }
 
@@ -338,41 +382,44 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         $this->newQuery();
 
-        $limit = is_null($limit) ? config('repositories.pagination.limit', 15) : $limit;
-
         return $this->query->simplePaginate($limit, $columns);
     }
 
     /**
-     * {@inheritdoc}
+     * Save a new entity in repository
+     *
+     * @param array $attributes
+     *
+     * @return Model|bool
      */
     public function create(array $attributes)
     {
         $entity = $this->getNew($attributes);
 
-        // Check authorization
-        if ($this->isAuthorized('create', $entity) === false) {
-            return false;
-        }
-
         return $entity->save() ? $entity : false;
     }
 
     /**
-     * {@inheritdoc}
+     * Update an entity with the given attributes and persist it
+     *
+     * @param Model $entity
+     * @param array $attributes
+     *
+     * @return bool
      */
     public function update(Model $entity, array $attributes)
     {
-        // Check authorization
-        if ($this->isAuthorized('update', $entity) === false) {
-            return false;
-        }
-
         return $entity->update($attributes);
     }
 
     /**
-     * {@inheritdoc}
+     * Delete a entity in repository
+     *
+     * @param mixed $entity
+     *
+     * @return bool|null
+     *
+     * @throws \Exception
      */
     public function delete($entity)
     {
@@ -380,22 +427,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $entity = $this->find($entity);
         }
 
-        // Check authorization
-        if ($this->isAuthorized('destroy', $entity) === false) {
-            return false;
-        }
-
         return $entity->delete();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function with(array $relations)
-    {
-        $this->with[] = $relations;
-
-        return $this;
     }
 
     /**
@@ -414,23 +446,15 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get the raw SQL statements for the request
+     *
+     * @return string
      */
     public function toSql()
     {
         $this->newQuery();
 
         return $this->query->toSql();
-    }
-
-    /**
-     * Return relations array.
-     *
-     * @return array
-     */
-    public function getWith()
-    {
-        return $this->with;
     }
 
     /**
@@ -477,7 +501,11 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Add a message to the repository's error messages.
+     *
+     * @param string $message
+     *
+     * @return null
      */
     public function addError($message)
     {
@@ -487,7 +515,9 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get the repository's error messages.
+     *
+     * @return \Illuminate\Support\MessageBag
      */
     public function getErrors()
     {
@@ -495,57 +525,56 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get the repository's first error message.
+     *
+     * @param string $default
+     *
+     * @return string
      */
     public function getErrorMessage($default = '')
     {
         return $this->errors->first('message') ?: $default;
+
     }
 
     /**
-     * Check if action is authorized.
+     * Append table name to column.
      *
-     * @param  string $ability
-     * @param  Model  $entity
+     * @param string $column
      *
-     * @return bool
+     * @return string
      */
-    public function isAuthorized($ability, $entity)
+    protected function appendTableName($column)
     {
-        if (!in_array($ability, $this->authorization)) {
-            return true;
-        }
-
-        return $this->authorize($ability, $entity);
+        return (strpos($column, '.') === false)
+            ? $this->modelInstance->getTable() . '.' . $column
+            : $column;
     }
 
     /**
-     * Authorize a given action against a set of arguments.
+     * Add a search where clause to the query.
      *
-     * @param  string $ability
-     * @param  mixed  $arguments
-     *
-     * @return bool
+     * @param Builder $query
+     * @param string  $param
+     * @param string  $column
+     * @param string  $value
+     * @param string  $boolean
      */
-    public function authorize($ability, $arguments = [])
+    protected function createSearchClause(Builder $query, $param, $column, $value, $boolean = 'and')
     {
-        try {
-            return app(Gate::class)->authorize($ability, $arguments);
+        if ($param === 'query') {
+            $query->where($this->appendTableName($column), 'LIKE', '%' . $value . '%', $boolean);
         }
-        catch (AuthorizationException $e) {
-            $msg = 'This action is unauthorized';
-
-            $this->addError($e->getMessage() ?: (function_exists('trans') ? trans("errors.$msg") : $msg));
-
-            return false;
+        else {
+            $query->where($this->appendTableName($column), '=', $value, $boolean);
         }
     }
 
     /**
      * Handle dynamic static method calls into the method.
      *
-     * @param  string $method
-     * @param  array  $parameters
+     * @param string $method
+     * @param array  $parameters
      *
      * @return mixed
      */

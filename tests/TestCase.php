@@ -33,22 +33,6 @@ class TestCase extends PHPUnit_Framework_TestCase
         return new \Torann\LaravelRepository\Test\Stubs\TestRepository();
     }
 
-    protected function makeCacheDecorator()
-    {
-        $repo = $this->makeRepository();
-
-        $cache = Mockery::mock('Torann\LaravelRepository\Cache\CacheInterface');
-
-        $cache->shouldReceive('setMinutes')->andReturn(90);
-
-        return new \Torann\LaravelRepository\Test\Stubs\TestCacheDecorator($repo, $cache);
-    }
-
-    protected function makeLaravelCache()
-    {
-        return new \Torann\LaravelRepository\Cache\LaravelCache(['test']);
-    }
-
     public function makeMockQuery()
     {
         return Mockery::mock('Illuminate\Database\Eloquent\Builder');
