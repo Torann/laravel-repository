@@ -24,6 +24,16 @@ abstract class AbstractRepository implements RepositoryContract
     const EXPIRES_END_OF_DAY = 'eod';
 
     /**
+     * Searching operator.
+     *
+     * This might be different when using a
+     * different database driver.
+     *
+     * @var string
+     */
+    public static $searchOperator = 'LIKE';
+
+    /**
      * @var \Illuminate\Database\Eloquent\Model
      */
     protected $modelInstance;
@@ -563,7 +573,7 @@ abstract class AbstractRepository implements RepositoryContract
     protected function createSearchClause(Builder $query, $param, $column, $value, $boolean = 'and')
     {
         if ($param === 'query') {
-            $query->where($this->appendTableName($column), 'LIKE', '%' . $value . '%', $boolean);
+            $query->where($this->appendTableName($column), self::$searchOperator, '%' . $value . '%', $boolean);
         }
         else {
             $query->where($this->appendTableName($column), '=', $value, $boolean);
