@@ -244,7 +244,7 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
                 $a = get_class($a).'|'.$a->getKey();
             }
         }
-        
+
         $args = serialize($args)
             . serialize($this->repo->getScopeQuery())
             . serialize($this->repo->getWith());
@@ -295,7 +295,7 @@ abstract class AbstractCacheDecorator implements RepositoryInterface
                 : $this->cacheMinutes;
         }
 
-        return $this->cacheMinutes;
+        return $time ?: $this->cacheMinutes;
     }
 
     /**
