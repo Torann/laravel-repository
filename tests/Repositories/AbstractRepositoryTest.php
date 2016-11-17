@@ -241,21 +241,6 @@ class AbstractRepositoryTest extends TestCase
     /**
      * @test
      */
-    public function testCacheCallbackWithOutCache()
-    {
-        $repo = $this->makeRepository();
-
-        $repo->builderMock
-            ->shouldReceive('where')->once()
-            ->with('email', 'admin@mail.com')->once()
-            ->andReturn('admin@mail.com');
-
-        $this->assertEquals('admin@mail.com', $repo->findByEmail('admin@mail.com'));
-    }
-
-    /**
-     * @test
-     */
     public function testCacheCallbackWithCache()
     {
         $repo = $this->makeRepository();
