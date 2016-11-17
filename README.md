@@ -19,6 +19,10 @@ Documentation for the package can be found on [Lyften.com](http://lyften.com/pro
 
 ## Change Log
 
+#### v0.4.1
+
+- Caching updates
+
 #### v0.4.0 - (Skinny version)
 
 - Removed Factory
