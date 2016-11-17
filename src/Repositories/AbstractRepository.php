@@ -138,17 +138,22 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Get a new query builder instance
+     * Get a new query builder instance with the applied
+     * the order by and scopes.
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param bool $skipOrdering
+     *
+     * @return self
      */
-    public function newQuery()
+    public function newQuery($skipOrdering = false)
     {
         $this->query = $this->getNew()->newQuery();
 
         // Apply order by
-        foreach ($this->orderBy as $column => $dir) {
-            $this->query->orderBy($column, $dir);
+        if ($skipOrdering === false) {
+            foreach ($this->orderBy as $column => $dir) {
+                $this->query->orderBy($column, $dir);
+            }
         }
 
         $this->applyScope();
@@ -406,7 +411,13 @@ abstract class AbstractRepository implements RepositoryContract
     {
         $entity = $this->getNew($attributes);
 
-        return $entity->save() ? $entity : false;
+        if ($entity->save()) {
+            $this->flushCache();
+
+            return $entity;
+        }
+
+        return false;
     }
 
     /**
@@ -419,7 +430,13 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function update(Model $entity, array $attributes)
     {
-        return $entity->update($attributes);
+        if ($entity->update($attributes)) {
+            $this->flushCache();
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -437,7 +454,13 @@ abstract class AbstractRepository implements RepositoryContract
             $entity = $this->find($entity);
         }
 
-        return $entity->delete();
+        if ($entity->delete()) {
+            $this->flushCache();
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

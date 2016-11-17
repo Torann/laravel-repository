@@ -17,6 +17,13 @@ trait Cacheable
     protected static $cache = null;
 
     /**
+     * Flush the cache after create/update/delete events.
+     *
+     * @var bool
+     */
+    protected $eventFlushCache = false;
+
+    /**
      * Global lifetime of the cache.
      *
      * @var int
@@ -40,6 +47,10 @@ trait Cacheable
      */
     public static function getCacheInstance()
     {
+        if (self::$cache === null) {
+            self::$cache = app('cache');
+        }
+
         return self::$cache;
     }
 
@@ -50,8 +61,7 @@ trait Cacheable
      */
     public function skippedCache()
     {
-        return self::getCacheInstance() !== null
-            || config('repositories.cache_enabled', false) === false
+        return config('repositories.cache_enabled', false) === false
             || app('request')->has(config('repositories.cache_skip_param', 'skipCache')) === true;
     }
 
@@ -96,8 +106,6 @@ trait Cacheable
      */
     public function cacheCallback($method, $args, Closure $callback, $time = null)
     {
-        $this->newQuery();
-
         // Cache disabled, just execute query & return result
         if ($this->skippedCache() === true) {
             return call_user_func($callback);
@@ -111,6 +119,24 @@ trait Cacheable
             $this->getCacheExpiresTime($time),
             $callback
         );
+    }
+
+    /**
+     * Flush the cache for the given repository.
+     *
+     * @return bool
+     */
+    public function flushCache()
+    {
+        // Cache disabled, just ignore this
+        if ($this->eventFlushCache === false || config('repositories.cache_enabled', false) === false) {
+            return false;
+        }
+
+        // Use the called class name as the tag
+        $tag = get_called_class();
+
+        return self::getCacheInstance()->tags(['repositories', $tag])->flush();
     }
 
     /**
