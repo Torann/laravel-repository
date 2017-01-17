@@ -185,11 +185,11 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function findOrFail($id)
+    public function findOrFail($id, $columns = ['*'])
     {
         $this->newQuery();
 
-        if ($result = $this->query->find($id)) {
+        if ($result = $this->query->find($id, $columns)) {
             return $result;
         }
 
@@ -209,7 +209,7 @@ abstract class AbstractRepository implements RepositoryContract
     {
         $this->newQuery();
 
-        return $this->query->where($field, '=', $value)->first();
+        return $this->query->where($field, '=', $value)->first($columns);
     }
 
     /**
