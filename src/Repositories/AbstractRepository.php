@@ -126,9 +126,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Get a new entity instance
      *
-     * @param array $attributes
-     *
-     * @return  \Illuminate\Database\Eloquent\Model
+     * @param  array  $attributes
+     * @return \Illuminate\Database\Eloquent\Model
      */
     public function getNew(array $attributes = [])
     {
@@ -141,8 +140,7 @@ abstract class AbstractRepository implements RepositoryContract
      * Get a new query builder instance with the applied
      * the order by and scopes.
      *
-     * @param bool $skipOrdering
-     *
+     * @param  bool  $skipOrdering
      * @return self
      */
     public function newQuery($skipOrdering = false)
@@ -164,9 +162,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find data by its primary key.
      *
-     * @param mixed $id
-     * @param array $columns
-     *
+     * @param  mixed  $id
+     * @param  array  $columns
      * @return Model|Collection
      */
     public function find($id, $columns = ['*'])
@@ -179,8 +176,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find a model by its primary key or throw an exception.
      *
-     * @para string $id
-     *
+     * @param  string  $id
+     * @param  array  $columns
      * @return \Illuminate\Database\Eloquent\Model
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
@@ -199,10 +196,9 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find data by field and value
      *
-     * @param string $field
-     * @param string $value
-     * @param array  $columns
-     *
+     * @param  string  $field
+     * @param  string  $value
+     * @param  array   $columns
      * @return Model|Collection
      */
     public function findBy($field, $value, $columns = ['*'])
@@ -215,10 +211,9 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find data by field
      *
-     * @param string $attribute
-     * @param mixed  $value
-     * @param array  $columns
-     *
+     * @param  string  $attribute
+     * @param  mixed   $value
+     * @param  array   $columns
      * @return mixed
      */
     public function findAllBy($attribute, $value, $columns = ['*'])
@@ -236,9 +231,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find data by multiple fields
      *
-     * @param array $where
-     * @param array $columns
-     *
+     * @param  array  $where
+     * @param  array  $columns
      * @return mixed
      */
     public function findWhere(array $where, $columns = ['*'])
@@ -261,9 +255,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Order results by.
      *
-     * @param string $column
-     * @param string $direction
-     *
+     * @param  string  $column
+     * @param  string  $direction
      * @return self
      */
     public function orderBy($column, $direction)
@@ -290,8 +283,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Filter results by given query params.
      *
-     * @param string|array $queries
-     *
+     * @param  string|array  $queries
      * @return self
      */
     public function search($queries)
@@ -338,8 +330,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository
      *
-     * @param array $columns
-     *
+     * @param  array  $columns
      * @return Collection
      */
     public function all($columns = ['*'])
@@ -352,9 +343,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Get an array with the values of a given column.
      *
-     * @param string $value
-     * @param string $key
-     *
+     * @param  string  $value
+     * @param  string  $key
      * @return array
      */
     public function pluck($value, $key = null)
@@ -373,9 +363,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param null  $limit
-     * @param array $columns
-     *
+     * @param  null  $limit
+     * @param  array  $columns
      * @return \Illuminate\Pagination\Paginator
      */
     public function paginate($limit = null, $columns = ['*'])
@@ -388,9 +377,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param null  $limit
-     * @param array $columns
-     *
+     * @param  null  $limit
+     * @param  array  $columns
      * @return \Illuminate\Pagination\Paginator
      */
     public function simplePaginate($limit = null, $columns = ['*'])
@@ -403,8 +391,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Save a new entity in repository
      *
-     * @param array $attributes
-     *
+     * @param  array  $attributes
      * @return Model|bool
      */
     public function create(array $attributes)
@@ -423,9 +410,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Update an entity with the given attributes and persist it
      *
-     * @param Model $entity
-     * @param array $attributes
-     *
+     * @param  Model  $entity
+     * @param  array  $attributes
      * @return bool
      */
     public function update(Model $entity, array $attributes)
@@ -442,8 +428,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Delete a entity in repository
      *
-     * @param mixed $entity
-     *
+     * @param  mixed  $entity
      * @return bool|null
      *
      * @throws \Exception
@@ -467,6 +452,7 @@ abstract class AbstractRepository implements RepositoryContract
      * Create model instance.
      *
      * @return \Illuminate\Database\Eloquent\Builder
+     *
      * @throws RepositoryException
      */
     public function makeModel()
@@ -536,8 +522,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Add a message to the repository's error messages.
      *
-     * @param string $message
-     *
+     * @param  string  $message
      * @return null
      */
     public function addError($message)
@@ -560,8 +545,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Get the repository's first error message.
      *
-     * @param string $default
-     *
+     * @param  string  $default
      * @return string
      */
     public function getErrorMessage($default = '')
@@ -573,8 +557,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Append table name to column.
      *
-     * @param string $column
-     *
+     * @param  string  $column
      * @return string
      */
     protected function appendTableName($column)
@@ -587,11 +570,12 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Add a search where clause to the query.
      *
-     * @param Builder $query
-     * @param string  $param
-     * @param string  $column
-     * @param string  $value
-     * @param string  $boolean
+     * @param  Builder  $query
+     * @param  string  $param
+     * @param  string  $column
+     * @param  string  $value
+     * @param  string  $boolean
+     * @return void
      */
     protected function createSearchClause(Builder $query, $param, $column, $value, $boolean = 'and')
     {
@@ -606,9 +590,8 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Handle dynamic static method calls into the method.
      *
-     * @param string $method
-     * @param array  $parameters
-     *
+     * @param  string  $method
+     * @param  array  $parameters
      * @return mixed
      */
     public function __call($method, $parameters)
