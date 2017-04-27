@@ -8,8 +8,8 @@ if (! function_exists('config')) {
 }
 
 if (! function_exists('app')) {
-    function app($key = null, $default = null)
+    function app($key = null)
     {
-        return \Torann\LaravelRepository\Test\TestCase::$functions->app($key, $default);
+        return \Torann\LaravelRepository\Test\TestCase::$functions->app($key);
     }
 }
