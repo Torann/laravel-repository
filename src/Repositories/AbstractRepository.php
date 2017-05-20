@@ -350,6 +350,20 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
+     * Retrieve the "count" result of the query.
+     *
+     * @param array $columns
+     *
+     * @return int
+     */
+    public function count($columns = ['*'])
+    {
+        $this->newQuery();
+
+        return $this->query->count($columns);
+    }
+
+    /**
      * Get an array with the values of a given column.
      *
      * @param string $value
