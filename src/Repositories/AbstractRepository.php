@@ -288,6 +288,18 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
+     * Return searchable keys.
+     *
+     * @return array
+     */
+    public function getSearchableKeys()
+    {
+        return array_values(array_map(function($value, $key) {
+            return is_array($value) ? $key : $value;
+        }, $this->searchable, array_keys($this->searchable)));
+    }
+
+    /**
      * Filter results by given query params.
      *
      * @param string|array $queries
