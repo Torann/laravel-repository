@@ -348,6 +348,20 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
+     * Set the "limit" value of the query.
+     *
+     * @param int $limit
+     *
+     * @return self
+     */
+    public function limit($limit)
+    {
+        return $this->addScopeQuery(function ($query) use ($limit) {
+            return $query->limit($limit);
+        });
+    }
+
+    /**
      * Retrieve all data of repository
      *
      * @param array $columns
@@ -399,31 +413,33 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param null  $limit
-     * @param array $columns
+     * @param int      $limit
+     * @param array    $columns
+     * @param int|null $page
      *
      * @return \Illuminate\Pagination\Paginator
      */
-    public function paginate($limit = null, $columns = ['*'])
+    public function paginate($limit = null, $columns = ['*'], $page = null)
     {
         $this->newQuery();
 
-        return $this->query->paginate($limit, $columns);
+        return $this->query->paginate($limit, $columns, $page);
     }
 
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param null  $limit
-     * @param array $columns
+     * @param int      $limit
+     * @param array    $columns
+     * @param int|null $page
      *
      * @return \Illuminate\Pagination\Paginator
      */
-    public function simplePaginate($limit = null, $columns = ['*'])
+    public function simplePaginate($limit = null, $columns = ['*'], $page = null)
     {
         $this->newQuery();
 
-        return $this->query->simplePaginate($limit, $columns);
+        return $this->query->simplePaginate($limit, $columns, $page);
     }
 
     /**
