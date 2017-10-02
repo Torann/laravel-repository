@@ -413,33 +413,35 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param int      $limit
-     * @param array    $columns
-     * @param int|null $page
+     * @param int       $perPage
+     * @param array     $columns
+     * @param  string   $pageName
+     * @param  int|null $page
      *
-     * @return \Illuminate\Pagination\Paginator
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($limit = null, $columns = ['*'], $page = null)
+    public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null)
     {
         $this->newQuery();
 
-        return $this->query->paginate($limit, $columns, $page);
+        return $this->query->paginate($perPage, $columns, $pageName, $page);
     }
 
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param int      $limit
-     * @param array    $columns
-     * @param int|null $page
+     * @param  int      $perPage
+     * @param  array    $columns
+     * @param  string   $pageName
+     * @param  int|null $page
      *
-     * @return \Illuminate\Pagination\Paginator
+     * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function simplePaginate($limit = null, $columns = ['*'], $page = null)
+    public function simplePaginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null)
     {
         $this->newQuery();
 
-        return $this->query->simplePaginate($limit, $columns, $page);
+        return $this->query->simplePaginate($perPage, $columns, $pageName, $page);
     }
 
     /**
