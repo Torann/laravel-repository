@@ -295,7 +295,7 @@ abstract class AbstractRepository implements RepositoryContract
     public function getSearchableKeys()
     {
         return array_values(array_map(function($value, $key) {
-            return is_array($value) ? $key : $value;
+            return (is_array($value) || is_numeric($key) === false) ? $key : $value;
         }, $this->searchable, array_keys($this->searchable)));
     }
 
