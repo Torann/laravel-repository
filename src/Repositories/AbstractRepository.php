@@ -80,6 +80,14 @@ abstract class AbstractRepository implements RepositoryContract
     protected $orderBy = [];
 
     /**
+     * One time skip of ordering. This is done when the
+     * ordering is overwritten by the orderBy method.
+     *
+     * @var bool
+     */
+    protected $skipOrderingOnce = false;
+
+    /**
      * Create a new Repository instance
      *
      * @throws RepositoryException
@@ -150,11 +158,14 @@ abstract class AbstractRepository implements RepositoryContract
         $this->query = $this->getNew()->newQuery();
 
         // Apply order by
-        if ($skipOrdering === false) {
+        if ($skipOrdering === false && $this->skipOrderingOnce === false) {
             foreach ($this->orderBy as $column => $dir) {
                 $this->query->orderBy($column, $dir);
             }
         }
+
+        // Reset the one time skip
+        $this->skipOrderingOnce = false;
 
         $this->applyScope();
 
@@ -268,17 +279,20 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function orderBy($column, $direction)
     {
+        // Ensure the sort is valid
+        if (in_array($column, $this->orderable) === false
+            && array_key_exists($column, $this->orderable) === false
+        ) {
+            return $this;
+        }
+
+        // One time skip
+        $this->skipOrderingOnce = true;
+
         return $this->addScopeQuery(function ($query) use ($column, $direction) {
 
             // Get valid sort order
             $direction = in_array(strtolower($direction), ['desc', 'asc']) ? $direction : 'asc';
-
-            // Ensure the sort is valid
-            if (in_array($column, $this->orderable) === false
-                && array_key_exists($column, $this->orderable) === false
-            ) {
-                return $query;
-            }
 
             // Check for table column mask
             $column = Arr::get($this->orderable, $column, $column);
