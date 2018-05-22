@@ -319,7 +319,7 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function getSearchableKeys()
     {
-        return array_values(array_map(function($value, $key) {
+        return array_values(array_map(function ($value, $key) {
             return (is_array($value) || is_numeric($key) === false) ? $key : $value;
         }, $this->searchable, array_keys($this->searchable)));
     }
@@ -341,7 +341,8 @@ abstract class AbstractRepository implements RepositoryContract
         }
 
         return $this->addScopeQuery(function ($query) use ($queries) {
-            $alias_suffix = 1;
+            // Keep track of what tables have been joined and their aliases
+            $joined = [];
 
             foreach ($this->searchable as $param => $columns) {
                 // It doesn't always have to map to something
@@ -357,62 +358,31 @@ abstract class AbstractRepository implements RepositoryContract
                 $columns = (array)$columns;
 
                 // Loop though the columns and look for relationships
-                foreach ($columns as $key=>$column) {
+                foreach ($columns as $key => $column) {
                     @list($joining_table, $options) = explode(':', $column);
 
                     if ($options !== null) {
-                        @list($column, $foreign_key, $related_key) = explode(',', $options);
+                        @list($column, $foreign_key, $related_key, $alias) = explode(',', $options);
 
-                        // Allow for overrides
-                        $related_key = $related_key ?: $param;
-
-                        // We need to join to the intermediate table
-                        $local_table = $this->getModel()->getTable();
-
-                        // Create an alias for the join
-                        $alias = "join_{$joining_table}_{$alias_suffix}";
-
-                        // Create the join
-                        $query->join(
-                            "{$joining_table} as {$alias}",
-                            "{$alias}.{$foreign_key}",
-                            "{$local_table}.{$related_key}"
-                        );
+                        // Join the table if it hasn't already been joined
+                        if (isset($joined[$joining_table]) == false) {
+                            $joined[$joining_table] = $this->addSearchJoin(
+                                $query,
+                                $joining_table,
+                                $foreign_key,
+                                $related_key ?: $param, // Allow for related key overriding
+                                $alias
+                            );
+                        }
 
                         // Set a new column search
-                        $columns[$key] = "{$alias}.{$column}";
-
-                        $alias_suffix++;
+                        $columns[$key] = "{$joined[$joining_table]}.{$column}";
                     }
                 }
 
-                // Get the range type
-                $range_type = strtolower(substr($value, 0, 2));
-
                 // Perform a range based query if the range is valid
                 // and the separator matches.
-                if (substr($value, 2, 1) === ':' && in_array($range_type, $this->range_keys)) {
-                    // Get the true value
-                    $value = substr($value, 3);
-
-                    switch ($range_type) {
-                        case 'gt':
-                            $query->where($this->appendTableName($columns[0]), '>', $value, 'and');
-                            break;
-                        case 'lt':
-                            $query->where($this->appendTableName($columns[0]), '<', $value, 'and');
-                            break;
-                        case 'ne':
-                            $query->where($this->appendTableName($columns[0]), '<>', $value, 'and');
-                            break;
-                        case 'bt':
-                            // Because this can only have two values
-                            if (count($values = explode(',', $value)) === 2) {
-                                $query->whereBetween($this->appendTableName($columns[0]), $values);
-                            }
-                            break;
-                    }
-
+                if ($this->createSearchRangeClause($query, $value, $columns)) {
                     continue;
                 }
 
@@ -745,6 +715,78 @@ abstract class AbstractRepository implements RepositoryContract
         else {
             $query->where($this->appendTableName($column), '=', $value, $boolean);
         }
+    }
+
+    /**
+     * Add a search join to the query.
+     *
+     * @param Builder $query
+     * @param string  $joining_table
+     * @param string  $foreign_key
+     * @param string  $related_key
+     * @param string  $alias
+     *
+     * @return string
+     */
+    protected function addSearchJoin(Builder $query, $joining_table, $foreign_key, $related_key, $alias)
+    {
+        // We need to join to the intermediate table
+        $local_table = $this->getModel()->getTable();
+
+        // Set the way the table will be join, with an alias or without
+        $table = $alias ? "{$joining_table} as {$alias}" : $joining_table;
+
+        // Create an alias for the join
+        $alias = $alias ?: $joining_table;
+
+        // Create the join
+        $query->join($table, "{$alias}.{$foreign_key}", "{$local_table}.{$related_key}");
+
+        return $alias;
+    }
+
+    /**
+     * Add a range clause to the query.
+     *
+     * @param Builder $query
+     * @param string  $value
+     * @param array   $columns
+     *
+     * @return bool
+     */
+    protected function createSearchRangeClause(Builder $query, $value, array $columns)
+    {
+        // Get the range type
+        $range_type = strtolower(substr($value, 0, 2));
+
+        // Perform a range based query if the range is valid
+        // and the separator matches.
+        if (substr($value, 2, 1) === ':' && in_array($range_type, $this->range_keys)) {
+            // Get the true value
+            $value = substr($value, 3);
+
+            switch ($range_type) {
+                case 'gt':
+                    $query->where($this->appendTableName($columns[0]), '>', $value, 'and');
+                    break;
+                case 'lt':
+                    $query->where($this->appendTableName($columns[0]), '<', $value, 'and');
+                    break;
+                case 'ne':
+                    $query->where($this->appendTableName($columns[0]), '<>', $value, 'and');
+                    break;
+                case 'bt':
+                    // Because this can only have two values
+                    if (count($values = explode(',', $value)) === 2) {
+                        $query->whereBetween($this->appendTableName($columns[0]), $values);
+                    }
+                    break;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
