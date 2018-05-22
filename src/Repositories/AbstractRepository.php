@@ -190,17 +190,18 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Find a model by its primary key or throw an exception.
      *
-     * @para string $id
+     * @param string $id
+     * @param  array $columns
      *
      * @return \Illuminate\Database\Eloquent\Model
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function findOrFail($id)
+    public function findOrFail($id, $columns = ['*'])
     {
         $this->newQuery();
 
-        if ($result = $this->query->find($id)) {
+        if ($result = $this->query->find($id, $columns)) {
             return $result;
         }
 
@@ -220,7 +221,7 @@ abstract class AbstractRepository implements RepositoryContract
     {
         $this->newQuery();
 
-        return $this->query->where($field, '=', $value)->first();
+        return $this->query->where($field, '=', $value)->first($columns);
     }
 
     /**
