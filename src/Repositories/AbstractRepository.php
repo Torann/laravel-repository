@@ -330,9 +330,9 @@ abstract class AbstractRepository implements RepositoryContract
         }
 
         return $this->addScopeQuery(function ($query) use ($queries) {
+            $alias_suffix = 1;
 
             foreach ($this->searchable as $param => $columns) {
-
                 // It doesn't always have to map to something
                 $param = is_numeric($param) ? $columns : $param;
 
@@ -345,6 +345,36 @@ abstract class AbstractRepository implements RepositoryContract
                 // Columns should be an array
                 $columns = (array)$columns;
 
+                // Loop though the columns and look for relationships
+                foreach ($columns as $key=>$column) {
+                    @list($joining_table, $options) = explode(':', $column);
+
+                    if ($options !== null) {
+                        @list($column, $foreign_key, $related_key) = explode(',', $options);
+
+                        // Allow for overrides
+                        $related_key = $related_key ?: $param;
+
+                        // We need to join to the intermediate table
+                        $local_table = $this->getModel()->getTable();
+
+                        // Create an alias for the join
+                        $alias = "join_{$joining_table}_{$alias_suffix}";
+
+                        // Create the join
+                        $query->join(
+                            "{$joining_table} as {$alias}",
+                            "{$alias}.{$foreign_key}",
+                            "{$local_table}.{$related_key}"
+                        );
+
+                        // Set a new column search
+                        $columns[$key] = "{$alias}.{$column}";
+
+                        $alias_suffix++;
+                    }
+                }
+
                 if (count($columns) > 1) {
                     $query->where(function ($q) use ($columns, $param, $value) {
                         foreach ($columns as $column) {
@@ -356,6 +386,11 @@ abstract class AbstractRepository implements RepositoryContract
                     $this->createSearchClause($query, $param, $columns[0], $value);
                 }
             }
+
+            // Ensure only the current model's table attributes are return
+            $query->addSelect([
+                $this->getModel()->getTable() . '.*',
+            ]);
 
             return $query;
         });
