@@ -16,27 +16,3 @@ The Laravel Repository package is meant to be a generic repository implementatio
 ## Official Documentation
 
 Documentation for the package can be found on [Lyften.com](http://lyften.com/projects/laravel-repository/).
-
-## Change Log
-
-#### v0.4.1
-
-- Caching updates
-
-#### v0.4.0 - (Skinny version)
-
-- Removed Factory
-- Removed excessive caching
-- Removed Authorization/Policies
-- Update the code to PSR-4 compliant
-- Simplified caching
-- Removed events
-- Added search
-- Improved ordering
-- Updated documentation
-
-#### v0.3.0
-
-- Added support for Laravel 5.3
-- Added Scopes
-- New caching setup
