@@ -427,18 +427,27 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param int       $perPage
+     * @param int       $per_page
      * @param array     $columns
-     * @param  string   $pageName
+     * @param  string   $page_name
      * @param  int|null $page
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null)
+    public function paginate($per_page = null, $columns = ['*'], $page_name = 'page', $page = null)
     {
+        // Get the per page max
+        $per_page_max = config('repositories.max_per_page', 100);
+
+        // Ensure the user can never make the per
+        // page limit higher than the defined max.
+        if ($per_page > $per_page_max) {
+            $per_page = $per_page_max;
+        }
+
         $this->newQuery();
 
-        return $this->query->paginate($perPage, $columns, $pageName, $page);
+        return $this->query->paginate($per_page, $columns, $page_name, $page);
     }
 
     /**
