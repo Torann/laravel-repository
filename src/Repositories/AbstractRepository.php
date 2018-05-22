@@ -88,6 +88,16 @@ abstract class AbstractRepository implements RepositoryContract
     protected $skipOrderingOnce = false;
 
     /**
+     * A set of keys used to perform range queries.
+     *
+     * @var array
+     */
+    protected $range_keys = [
+        'lt', 'gt',
+        'bt', 'ne',
+    ];
+
+    /**
      * Create a new Repository instance
      *
      * @throws RepositoryException
@@ -376,6 +386,37 @@ abstract class AbstractRepository implements RepositoryContract
                     }
                 }
 
+                // Get the range type
+                $range_type = strtolower(substr($value, 0, 2));
+
+                // Perform a range based query if the range is valid
+                // and the separator matches.
+                if (substr($value, 2, 1) === ':' && in_array($range_type, $this->range_keys)) {
+                    // Get the true value
+                    $value = substr($value, 3);
+
+                    switch ($range_type) {
+                        case 'gt':
+                            $query->where($this->appendTableName($columns[0]), '>', $value, 'and');
+                            break;
+                        case 'lt':
+                            $query->where($this->appendTableName($columns[0]), '<', $value, 'and');
+                            break;
+                        case 'ne':
+                            $query->where($this->appendTableName($columns[0]), '<>', $value, 'and');
+                            break;
+                        case 'bt':
+                            // Because this can only have two values
+                            if (count($values = explode(',', $value)) === 2) {
+                                $query->whereBetween($this->appendTableName($columns[0]), $values);
+                            }
+                            break;
+                    }
+
+                    continue;
+                }
+
+                // Create standard query
                 if (count($columns) > 1) {
                     $query->where(function ($q) use ($columns, $param, $value) {
                         foreach ($columns as $column) {
