@@ -756,6 +756,11 @@ abstract class AbstractRepository implements RepositoryContract
      */
     protected function createSearchRangeClause(Builder $query, $value, array $columns)
     {
+        // Skip arrays
+        if (is_array($value) === true) {
+            return false;
+        }
+
         // Get the range type
         $range_type = strtolower(substr($value, 0, 2));
 
