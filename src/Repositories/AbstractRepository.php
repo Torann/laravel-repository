@@ -761,7 +761,6 @@ abstract class AbstractRepository implements RepositoryContract
     {
         // Skip arrays
         if (is_array($value) === true) {
-            dd($value);
             return false;
         }
 
