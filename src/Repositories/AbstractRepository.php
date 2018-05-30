@@ -712,6 +712,9 @@ abstract class AbstractRepository implements RepositoryContract
         if ($param === 'query') {
             $query->where($this->appendTableName($column), self::$searchOperator, '%' . $value . '%', $boolean);
         }
+        elseif (is_array($value)) {
+            $query->whereIn($this->appendTableName($column), $value, $boolean);
+        }
         else {
             $query->where($this->appendTableName($column), '=', $value, $boolean);
         }
@@ -758,6 +761,7 @@ abstract class AbstractRepository implements RepositoryContract
     {
         // Skip arrays
         if (is_array($value) === true) {
+            dd($value);
             return false;
         }
 
