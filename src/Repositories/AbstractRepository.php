@@ -169,7 +169,7 @@ abstract class AbstractRepository implements RepositoryContract
 
         // Apply order by
         if ($skipOrdering === false && $this->skipOrderingOnce === false) {
-            foreach ($this->orderBy as $column => $dir) {
+            foreach ($this->getOrderBy() as $column => $dir) {
                 $this->query->orderBy($column, $dir);
             }
         }
@@ -310,6 +310,16 @@ abstract class AbstractRepository implements RepositoryContract
 
             return $query->orderBy($this->appendTableName($column), $direction);
         });
+    }
+
+    /**
+     * Return the order by array.
+     *
+     * @return array
+     */
+    public function getOrderBy()
+    {
+        return $this->orderBy;
     }
 
     /**
