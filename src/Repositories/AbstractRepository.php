@@ -48,7 +48,6 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * @var \Illuminate\Database\Eloquent\Builder
      */
-
     protected $query;
 
     /**
@@ -703,9 +702,17 @@ abstract class AbstractRepository implements RepositoryContract
      */
     protected function appendTableName($column)
     {
-        return (strpos($column, '.') === false)
-            ? $this->modelInstance->getTable() . '.' . $column
-            : $column;
+        // If missing prepend the table name
+        if (strpos($column, '.') === false) {
+            return $this->modelInstance->getTable() . '.' . $column;
+        }
+
+        // Remove alias prefix indicator
+        if (substr($column, 0, 2) === '_.') {
+            return preg_replace('/^_\./', '', $column);
+        }
+
+        return $column;
     }
 
     /**
