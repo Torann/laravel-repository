@@ -104,7 +104,6 @@ abstract class AbstractRepository implements RepositoryContract
     public function __construct()
     {
         $this->makeModel();
-        $this->scopeReset();
         $this->boot();
     }
 
