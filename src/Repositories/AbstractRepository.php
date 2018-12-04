@@ -103,6 +103,8 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function __construct()
     {
+        $this->errors = new MessageBag;
+
         $this->makeModel();
         $this->boot();
     }
