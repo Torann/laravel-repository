@@ -103,8 +103,6 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function __construct()
     {
-        $this->errors = new MessageBag;
-
         $this->makeModel();
         $this->boot();
     }
@@ -666,7 +664,7 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function addError($message)
     {
-        $this->errors->add('message', $message);
+        $this->getErrors()->add('message', $message);
 
         return null;
     }
@@ -678,6 +676,10 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function getErrors()
     {
+        if ($this->errors === null) {
+            $this->errors = new MessageBag;
+        }
+
         return $this->errors;
     }
 
@@ -690,7 +692,7 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function getErrorMessage($default = '')
     {
-        return $this->errors->first('message') ?: $default;
+        return $this->getErrors()->first('message') ?: $default;
 
     }
 
