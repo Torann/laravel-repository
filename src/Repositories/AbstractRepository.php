@@ -763,7 +763,7 @@ abstract class AbstractRepository implements RepositoryContract
         $alias = $alias ?: $joining_table;
 
         // Create the join
-        $query->join($table, "{$alias}.{$foreign_key}", "{$local_table}.{$related_key}");
+        $query->leftJoin($table, "{$alias}.{$foreign_key}", "{$local_table}.{$related_key}");
 
         return $alias;
     }
