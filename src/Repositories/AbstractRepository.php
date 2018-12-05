@@ -593,11 +593,11 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function makeModel()
     {
-        if (!$this->model) {
-            throw new RepositoryException("The model class must be set on the repository.");
+        if (empty($this->model)) {
+            throw new RepositoryException('The model class must be set on the repository.');
         }
 
-        return $this->modelInstance = with(new $this->model);
+        return $this->modelInstance = new $this->model;
     }
 
     /**
@@ -693,7 +693,6 @@ abstract class AbstractRepository implements RepositoryContract
     public function getErrorMessage($default = '')
     {
         return $this->getErrors()->first('message') ?: $default;
-
     }
 
     /**
