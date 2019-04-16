@@ -213,7 +213,7 @@ abstract class AbstractRepository implements RepositoryContract
             return $result;
         }
 
-        throw (new ModelNotFoundException)->setModel($this->model);
+        throw (new ModelNotFoundException)->setModel($this->modelInstance);
     }
 
     /**
@@ -599,11 +599,11 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function makeModel()
     {
-        if (empty($this->model)) {
+        if (empty($this->modelInstance)) {
             throw new RepositoryException('The model class must be set on the repository.');
         }
 
-        return $this->modelInstance = new $this->model;
+        return $this->modelInstance = new $this->modelInstance;
     }
 
     /**
