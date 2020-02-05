@@ -40,8 +40,8 @@ interface RepositoryContract
     /**
      * Find data by field and value
      *
-     * @param      $field
-     * @param      $value
+     * @param       $field
+     * @param       $value
      * @param array $columns
      *
      * @return Model|Collection

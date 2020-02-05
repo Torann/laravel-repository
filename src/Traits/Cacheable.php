@@ -68,18 +68,18 @@ trait Cacheable
     /**
      * Get Cache key for the method
      *
-     * @param  string $method
-     * @param  mixed  $args
-     * @param  string  $tag
+     * @param string $method
+     * @param mixed  $args
+     * @param string $tag
      *
      * @return string
      */
     public function getCacheKey($method, $args = null, $tag)
     {
         // Sort through arguments
-        foreach($args as &$a) {
+        foreach ($args as &$a) {
             if ($a instanceof Model) {
-                $a = get_class($a).'|'.$a->getKey();
+                $a = get_class($a) . '|' . $a->getKey();
             }
         }
 
@@ -100,7 +100,7 @@ trait Cacheable
      * @param string   $method
      * @param array    $args
      * @param \Closure $callback
-     * @param  int     $time
+     * @param int      $time
      *
      * @return mixed
      */

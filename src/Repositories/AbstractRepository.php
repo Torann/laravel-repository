@@ -199,7 +199,7 @@ abstract class AbstractRepository implements RepositoryContract
      * Find a model by its primary key or throw an exception.
      *
      * @param string $id
-     * @param  array $columns
+     * @param array  $columns
      *
      * @return \Illuminate\Database\Eloquent\Model
      *
@@ -269,8 +269,7 @@ abstract class AbstractRepository implements RepositoryContract
             if (is_array($value)) {
                 list($field, $condition, $val) = $value;
                 $this->query->where($field, $condition, $val);
-            }
-            else {
+            } else {
                 $this->query->where($field, '=', $value);
             }
         }
@@ -327,9 +326,21 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function getSearchableKeys()
     {
+        $return = $this->getSearchable();
+
         return array_values(array_map(function ($value, $key) {
             return (is_array($value) || is_numeric($key) === false) ? $key : $value;
-        }, $this->searchable, array_keys($this->searchable)));
+        }, $return, array_keys($return)));
+    }
+
+    /**
+     * Return searchable array.
+     *
+     * @return array
+     */
+    public function getSearchable()
+    {
+        return $this->searchable;
     }
 
     /**
@@ -352,7 +363,7 @@ abstract class AbstractRepository implements RepositoryContract
             // Keep track of what tables have been joined and their aliases
             $joined = [];
 
-            foreach ($this->searchable as $param => $columns) {
+            foreach ($this->getSearchable() as $param => $columns) {
                 // It doesn't always have to map to something
                 $param = is_numeric($param) ? $columns : $param;
 
@@ -363,7 +374,7 @@ abstract class AbstractRepository implements RepositoryContract
                 if ($value === '' || $value === null) continue;
 
                 // Columns should be an array
-                $columns = (array)$columns;
+                $columns = (array) $columns;
 
                 // Loop though the columns and look for relationships
                 foreach ($columns as $key => $column) {
@@ -401,8 +412,7 @@ abstract class AbstractRepository implements RepositoryContract
                             $this->createSearchClause($q, $param, $column, $value, 'or');
                         }
                     });
-                }
-                else {
+                } else {
                     $this->createSearchClause($query, $param, $columns[0], $value);
                 }
             }
@@ -482,10 +492,10 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param int       $per_page
-     * @param array     $columns
-     * @param  string   $page_name
-     * @param  int|null $page
+     * @param int      $per_page
+     * @param array    $columns
+     * @param string   $page_name
+     * @param int|null $page
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
@@ -511,10 +521,10 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param  int      $per_page
-     * @param  array    $columns
-     * @param  string   $page_name
-     * @param  int|null $page
+     * @param int      $per_page
+     * @param array    $columns
+     * @param string   $page_name
+     * @param int|null $page
      *
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
@@ -716,7 +726,7 @@ abstract class AbstractRepository implements RepositoryContract
         }
 
         // Remove alias prefix indicator
-        if (substr($column, 0, 2) === '_.') {
+        if (preg_match('/^_\./', $column) != false) {
             return preg_replace('/^_\./', '', $column);
         }
 
@@ -736,11 +746,9 @@ abstract class AbstractRepository implements RepositoryContract
     {
         if ($param === 'query') {
             $query->where($this->appendTableName($column), self::$searchOperator, '%' . $value . '%', $boolean);
-        }
-        elseif (is_array($value)) {
+        } elseif (is_array($value)) {
             $query->whereIn($this->appendTableName($column), $value, $boolean);
-        }
-        else {
+        } else {
             $query->where($this->appendTableName($column), '=', $value, $boolean);
         }
     }
