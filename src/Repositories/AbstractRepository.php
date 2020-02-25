@@ -344,6 +344,16 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
+     * Return orderable array.
+     *
+     * @return array
+     */
+    public function getOrderable()
+    {
+        return $this->orderable;
+    }
+
+    /**
      * Filter results by given query params.
      *
      * @param string|array $queries
