@@ -288,8 +288,8 @@ abstract class AbstractRepository implements RepositoryContract
     public function orderBy($column, $direction)
     {
         // Ensure the sort is valid
-        if (in_array($column, $this->orderable) === false
-            && array_key_exists($column, $this->orderable) === false
+        if (in_array($column, $this->getOrderable()) === false
+            && array_key_exists($column, $this->getOrderable()) === false
         ) {
             return $this;
         }
@@ -303,7 +303,7 @@ abstract class AbstractRepository implements RepositoryContract
             $direction = in_array(strtolower($direction), ['desc', 'asc']) ? $direction : 'asc';
 
             // Check for table column mask
-            $column = Arr::get($this->orderable, $column, $column);
+            $column = Arr::get($this->getOrderable(), $column, $column);
 
             return $query->orderBy($this->appendTableName($column), $direction);
         });
