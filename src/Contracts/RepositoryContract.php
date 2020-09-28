@@ -5,7 +5,6 @@ namespace Torann\LaravelRepository\Contracts;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
-use Torann\LaravelRepository\Exceptions\RepositoryException;
 
 interface RepositoryContract
 {
@@ -113,7 +112,7 @@ interface RepositoryContract
      * @param null  $limit
      * @param array $columns
      *
-     * @return Paginator
+     * @return \Illuminate\Contracts\Pagination\Paginator
      */
     public function paginate($limit = null, $columns = ['*']);
 
@@ -123,7 +122,7 @@ interface RepositoryContract
      * @param null  $limit
      * @param array $columns
      *
-     * @return \Illuminate\Pagination\Paginator
+     * @return \Illuminate\Contracts\Pagination\Paginator
      */
     public function simplePaginate($limit = null, $columns = ['*']);
 
@@ -168,10 +167,11 @@ interface RepositoryContract
      * Add a message to the repository's error messages.
      *
      * @param string $message
+     * @param string $key
      *
-     * @return null
+     * @return self
      */
-    public function addError($message);
+    public function addError($message, string $key = 'message');
 
     /**
      * Get the repository's error messages.

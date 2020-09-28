@@ -74,7 +74,7 @@ trait Cacheable
      *
      * @return string
      */
-    public function getCacheKey($method, $args = null, $tag)
+    public function getCacheKey($method, $args = null, $tag = '')
     {
         // Sort through arguments
         foreach ($args as &$a) {
@@ -86,7 +86,8 @@ trait Cacheable
         // Create hash from arguments and query
         $args = serialize($args) . serialize($this->getScopeQuery());
 
-        return sprintf('%s-%s@%s-%s',
+        return sprintf(
+            '%s-%s@%s-%s',
             config('app.locale'),
             $tag,
             $method,

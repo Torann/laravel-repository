@@ -320,6 +320,29 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
+     * Set searchable array.
+     *
+     * @param array|string $key
+     * @param mixed        $value
+     *
+     * @return self
+     */
+    public function setSearchable($key, $value = null)
+    {
+        // Allow for a batch assignment
+        if (is_array($key) === false) {
+            $key = [$key => $value];
+        }
+
+        // Update the searchable values
+        foreach ($key as $k => $v) {
+            $this->searchable[$k] = $v;
+        }
+
+        return $this;
+    }
+
+    /**
      * Return searchable keys.
      *
      * @return array
@@ -381,7 +404,9 @@ abstract class AbstractRepository implements RepositoryContract
                 $value = Arr::get($queries, $param, '');
 
                 // Validate value
-                if ($value === '' || $value === null) continue;
+                if ($value === '' || $value === null) {
+                    continue;
+                }
 
                 // Columns should be an array
                 $columns = (array) $columns;
@@ -627,6 +652,21 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
+     * Get a new query builder instance with the applied
+     * the order by and scopes.
+     *
+     * @param bool $skipOrdering
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function getBuilder(bool $skipOrdering = false)
+    {
+        $this->newQuery($skipOrdering);
+
+        return $this->query;
+    }
+
+    /**
      * Get the raw SQL statements for the request
      *
      * @return string
@@ -685,14 +725,15 @@ abstract class AbstractRepository implements RepositoryContract
      * Add a message to the repository's error messages.
      *
      * @param string $message
+     * @param string $key
      *
-     * @return null
+     * @return self
      */
-    public function addError($message)
+    public function addError($message, string $key = 'message')
     {
-        $this->getErrors()->add('message', $message);
+        $this->getErrors()->add($key, $message);
 
-        return null;
+        return $this;
     }
 
     /**
