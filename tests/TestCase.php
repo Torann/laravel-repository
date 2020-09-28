@@ -3,13 +3,13 @@
 namespace Torann\LaravelRepository\Test;
 
 use Mockery;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
-class TestCase extends PHPUnit_Framework_TestCase
+class TestCase extends PHPUnitTestCase
 {
     public static $functions;
 
-    public function setUp()
+    public function setUp(): void
     {
         self::$functions = Mockery::mock();
 
@@ -20,15 +20,16 @@ class TestCase extends PHPUnit_Framework_TestCase
         // Request mock
         $requestMock = Mockery::mock('Illuminate\Http\Request');
         $requestMock->shouldReceive('get')->andReturn(null);
+
         self::$functions->shouldReceive('app')->with('request', null)->andReturn($requestMock);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         Mockery::close();
     }
 
-    protected function makeRepository()
+    protected function makeRepository(): Stubs\TestRepository
     {
         return new \Torann\LaravelRepository\Test\Stubs\TestRepository();
     }
