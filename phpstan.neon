@@ -3,4 +3,5 @@ parameters:
         - vendor
         - resources
     ignoreErrors:
-        - '#Function config not found#'
+        - '#Function config_path not found#'
+        - '#Access to an undefined property Torann\\LaravelRepository\\Repositories\\AbstractRepository::\$model#'
