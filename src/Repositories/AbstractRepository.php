@@ -6,7 +6,6 @@ use Closure;
 use BadMethodCallException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\MessageBag;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Torann\LaravelRepository\Traits\Cacheable;
@@ -24,10 +23,8 @@ abstract class AbstractRepository implements RepositoryContract
     const EXPIRES_END_OF_DAY = 'eod';
 
     /**
-     * Searching operator.
-     *
-     * This might be different when using a
-     * different database driver.
+     * Searching operator. This might be different when using
+     * a different database driver.
      *
      * @var string
      */
@@ -97,8 +94,6 @@ abstract class AbstractRepository implements RepositoryContract
     ];
 
     /**
-     * Create a new Repository instance
-     *
      * @throws RepositoryException
      */
     public function __construct()
@@ -116,11 +111,9 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Return model instance.
-     *
-     * @return Model
+     * {@inheritDoc}
      */
-    public function getModel()
+    public function getModel(): Model
     {
         return $this->modelInstance;
     }
@@ -128,7 +121,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Reset internal Query
      *
-     * @return $this
+     * @return static
      */
     protected function scopeReset()
     {
@@ -144,9 +137,9 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @param array $attributes
      *
-     * @return  \Illuminate\Database\Eloquent\Model
+     * @return Model
      */
-    public function getNew(array $attributes = [])
+    public function getNew(array $attributes = []): Model
     {
         $this->errors = new MessageBag;
 
@@ -159,9 +152,9 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @param bool $skipOrdering
      *
-     * @return self
+     * @return static
      */
-    public function newQuery($skipOrdering = false)
+    public function newQuery(bool $skipOrdering = false)
     {
         $this->query = $this->getNew()->newQuery();
 
@@ -181,14 +174,9 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Find data by its primary key.
-     *
-     * @param mixed $id
-     * @param array $columns
-     *
-     * @return Model|Collection
+     * {@inheritDoc}
      */
-    public function find($id, $columns = ['*'])
+    public function find(mixed $id, array $columns = ['*'])
     {
         $this->newQuery();
 
@@ -196,16 +184,9 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Find a model by its primary key or throw an exception.
-     *
-     * @param string $id
-     * @param array  $columns
-     *
-     * @return \Illuminate\Database\Eloquent\Model
-     *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * {@inheritDoc}
      */
-    public function findOrFail($id, $columns = ['*'])
+    public function findOrFail(string $id, array $columns = ['*'])
     {
         $this->newQuery();
 
@@ -213,19 +194,14 @@ abstract class AbstractRepository implements RepositoryContract
             return $result;
         }
 
+        // @phpstan-ignore-next-line
         throw (new ModelNotFoundException)->setModel($this->model);
     }
 
     /**
-     * Find data by field and value
-     *
-     * @param string $field
-     * @param string $value
-     * @param array  $columns
-     *
-     * @return Model|Collection
+     * {@inheritDoc}
      */
-    public function findBy($field, $value, $columns = ['*'])
+    public function findBy(string $field, string $value, array $columns = ['*'])
     {
         $this->newQuery();
 
@@ -233,19 +209,12 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Find data by field
-     *
-     * @param string $attribute
-     * @param mixed  $value
-     * @param array  $columns
-     *
-     * @return mixed
+     * {@inheritDoc}
      */
-    public function findAllBy($attribute, $value, $columns = ['*'])
+    public function findAllBy(string $attribute, mixed $value, array $columns = ['*'])
     {
         $this->newQuery();
 
-        // Perform where in
         if (is_array($value)) {
             return $this->query->whereIn($attribute, $value)->get($columns);
         }
@@ -254,20 +223,15 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Find data by multiple fields
-     *
-     * @param array $where
-     * @param array $columns
-     *
-     * @return mixed
+     * {@inheritDoc}
      */
-    public function findWhere(array $where, $columns = ['*'])
+    public function findWhere(array $where, array $columns = ['*'])
     {
         $this->newQuery();
 
         foreach ($where as $field => $value) {
             if (is_array($value)) {
-                list($field, $condition, $val) = $value;
+                [$field, $condition, $val] = $value;
                 $this->query->where($field, $condition, $val);
             } else {
                 $this->query->where($field, '=', $value);
@@ -278,14 +242,9 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Order results by.
-     *
-     * @param string $column
-     * @param string $direction
-     *
-     * @return self
+     * {@inheritDoc}
      */
-    public function orderBy($column, $direction)
+    public function orderBy(mixed $column, string|null $direction)
     {
         // Ensure the sort is valid
         if (in_array($column, $this->getOrderable()) === false
@@ -298,7 +257,6 @@ abstract class AbstractRepository implements RepositoryContract
         $this->skipOrderingOnce = true;
 
         return $this->addScopeQuery(function ($query) use ($column, $direction) {
-
             // Get valid sort order
             $direction = in_array(strtolower($direction), ['desc', 'asc']) ? $direction : 'asc';
 
@@ -310,11 +268,23 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
+     * @param array $order_by
+     *
+     * @return static
+     */
+    public function setOrderBy(array $order_by)
+    {
+        $this->orderBy = $order_by;
+
+        return $this;
+    }
+
+    /**
      * Return the order by array.
      *
      * @return array
      */
-    public function getOrderBy()
+    public function getOrderBy(): array
     {
         return $this->orderBy;
     }
@@ -325,12 +295,18 @@ abstract class AbstractRepository implements RepositoryContract
      * @param array|string $key
      * @param mixed        $value
      *
-     * @return self
+     * @return static
      */
-    public function setSearchable($key, $value = null)
+    public function setSearchable(array|string $key, mixed $value = null)
     {
         // Allow for a batch assignment
         if (is_array($key) === false) {
+            if ($value === null) {
+                $this->searchable[] = $key;
+
+                return $this;
+            }
+
             $key = [$key => $value];
         }
 
@@ -347,7 +323,7 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @return array
      */
-    public function getSearchableKeys()
+    public function getSearchableKeys(): array
     {
         $return = $this->getSearchable();
 
@@ -361,7 +337,7 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @return array
      */
-    public function getSearchable()
+    public function getSearchable(): array
     {
         return $this->searchable;
     }
@@ -371,19 +347,15 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @return array
      */
-    public function getOrderable()
+    public function getOrderable(): array
     {
         return $this->orderable;
     }
 
     /**
-     * Filter results by given query params.
-     *
-     * @param string|array $queries
-     *
-     * @return self
+     * {@inheritDoc}
      */
-    public function search($queries)
+    public function search(string|array $queries)
     {
         // Adjust for simple search queries
         if (is_string($queries)) {
@@ -464,25 +436,25 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Set the "limit" value of the query.
      *
-     * @param int $limit
+     * @param mixed $limit
      *
-     * @return self
+     * @return static
      */
-    public function limit($limit)
+    public function limit(mixed $limit)
     {
-        return $this->addScopeQuery(function ($query) use ($limit) {
-            return $query->limit($limit);
-        });
+        if ($limit = ((int) $limit)) {
+            return $this->addScopeQuery(function ($query) use ($limit) {
+                return $query->limit($limit);
+            });
+        }
+
+        return $this;
     }
 
     /**
-     * Retrieve all data of repository
-     *
-     * @param array $columns
-     *
-     * @return Collection
+     * {@inheritDoc}
      */
-    public function all($columns = ['*'])
+    public function all(array $columns = ['*'])
     {
         $this->newQuery();
 
@@ -496,7 +468,7 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @return int
      */
-    public function count($columns = ['*'])
+    public function count(array $columns = ['*'])
     {
         $this->newQuery();
 
@@ -504,14 +476,9 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Get an array with the values of a given column.
-     *
-     * @param string $value
-     * @param string $key
-     *
-     * @return array
+     * {@inheritDoc}
      */
-    public function pluck($value, $key = null)
+    public function pluck(string $value, string $key = null)
     {
         $this->newQuery();
 
@@ -527,20 +494,24 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param int      $per_page
-     * @param array    $columns
-     * @param string   $page_name
-     * @param int|null $page
+     * @param mixed        $per_page
+     * @param array|string $columns
+     * @param string       $page_name
+     * @param mixed        $page
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($per_page = null, $columns = ['*'], $page_name = 'page', $page = null)
-    {
+    public function paginate(
+        mixed        $per_page = null,
+        string|array $columns = ['*'],
+        string       $page_name = 'page',
+        mixed        $page = null
+    ) {
         // Get the default per page when not set
-        $per_page = $per_page ?: config('repositories.per_page', 15);
+        $per_page = ((int) $per_page) ?: config('repositories.per_page', 15);
 
         // Get the per page max
-        $per_page_max = config('repositories.max_per_page', 100);
+        $per_page_max = ((int) config('repositories.max_per_page', 100)) ?: 100;
 
         // Ensure the user can never make the per
         // page limit higher than the defined max.
@@ -550,35 +521,35 @@ abstract class AbstractRepository implements RepositoryContract
 
         $this->newQuery();
 
-        return $this->query->paginate($per_page, $columns, $page_name, $page);
+        return $this->query->paginate($per_page, $columns, $page_name, ((int) $page));
     }
 
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param int      $per_page
-     * @param array    $columns
-     * @param string   $page_name
-     * @param int|null $page
+     * @param mixed        $per_page
+     * @param string|array $columns
+     * @param string       $page_name
+     * @param mixed        $page
      *
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function simplePaginate($per_page = null, $columns = ['*'], $page_name = 'page', $page = null)
-    {
+    public function simplePaginate(
+        mixed        $per_page = null,
+        string|array $columns = ['*'],
+        string       $page_name = 'page',
+        mixed        $page = null
+    ) {
         $this->newQuery();
 
         // Get the default per page when not set
-        $per_page = $per_page ?: config('repositories.per_page', 15);
+        $per_page = ((int) $per_page) ?: config('repositories.per_page', 15);
 
-        return $this->query->simplePaginate($per_page, $columns, $page_name, $page);
+        return $this->query->simplePaginate($per_page, $columns, $page_name, ((int) $page));
     }
 
     /**
-     * Save a new entity in repository
-     *
-     * @param array $attributes
-     *
-     * @return Model|bool
+     * {@inheritDoc}
      */
     public function create(array $attributes)
     {
@@ -594,12 +565,7 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Update an entity with the given attributes and persist it
-     *
-     * @param Model $entity
-     * @param array $attributes
-     *
-     * @return bool
+     * {@inheritDoc}
      */
     public function update(Model $entity, array $attributes)
     {
@@ -613,15 +579,9 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Delete a entity in repository
-     *
-     * @param mixed $entity
-     *
-     * @return bool|null
-     *
-     * @throws \Exception
+     * {@inheritDoc}
      */
-    public function delete($entity)
+    public function delete(mixed $entity)
     {
         if (($entity instanceof Model) === false) {
             $entity = $this->find($entity);
@@ -693,7 +653,7 @@ abstract class AbstractRepository implements RepositoryContract
      *
      * @param Closure $scope
      *
-     * @return $this
+     * @return static
      */
     public function addScopeQuery(Closure $scope)
     {
@@ -705,7 +665,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * Apply scope in current Query
      *
-     * @return $this
+     * @return static
      */
     protected function applyScope()
     {
@@ -727,9 +687,9 @@ abstract class AbstractRepository implements RepositoryContract
      * @param string $message
      * @param string $key
      *
-     * @return self
+     * @return static
      */
-    public function addError($message, string $key = 'message')
+    public function addError(string $message, string $key = 'message')
     {
         $this->getErrors()->add($key, $message);
 
@@ -751,13 +711,9 @@ abstract class AbstractRepository implements RepositoryContract
     }
 
     /**
-     * Get the repository's first error message.
-     *
-     * @param string $default
-     *
-     * @return string
+     * {@inheritDoc}
      */
-    public function getErrorMessage($default = '')
+    public function getErrorMessage(string $default = ''): string
     {
         return $this->getErrors()->first('message') ?: $default;
     }

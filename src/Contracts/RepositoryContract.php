@@ -3,9 +3,14 @@
 namespace Torann\LaravelRepository\Contracts;
 
 use Illuminate\Support\Collection;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @template TKey of array-key
+ * @template TValue
+ *
+ * @implements \ArrayAccess<TKey, TValue>
+ */
 interface RepositoryContract
 {
     /**
@@ -13,7 +18,7 @@ interface RepositoryContract
      *
      * @return Model
      */
-    public function getModel();
+    public function getModel(): Model;
 
     /**
      * Find data by id
@@ -23,29 +28,29 @@ interface RepositoryContract
      *
      * @return Model|Collection
      */
-    public function find($id, $columns = ['*']);
+    public function find(mixed $id, array $columns = ['*']);
 
     /**
      * Find a model by its primary key or throw an exception.
      *
-     * @para string $id
+     * @param string $id
+     * @param array  $columns
      *
-     * @return \Illuminate\Database\Eloquent\Model
-     *
+     * @return Model
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
-    public function findOrFail($id);
+    public function findOrFail(string $id, array $columns = ['*']);
 
     /**
      * Find data by field and value
      *
-     * @param       $field
-     * @param       $value
-     * @param array $columns
+     * @param string $field
+     * @param string $value
+     * @param array  $columns
      *
-     * @return Model|Collection
+     * @return Model|object|static|null
      */
-    public function findBy($field, $value, $columns = ['*']);
+    public function findBy(string $field, string $value, array $columns = ['*']);
 
     /**
      * Find data by field
@@ -54,9 +59,9 @@ interface RepositoryContract
      * @param mixed $value
      * @param array $columns
      *
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function findAllBy($attribute, $value, $columns = ['*']);
+    public function findAllBy(string $attribute, mixed $value, array $columns = ['*']);
 
     /**
      * Find data by multiple fields
@@ -64,28 +69,28 @@ interface RepositoryContract
      * @param array $where
      * @param array $columns
      *
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function findWhere(array $where, $columns = ['*']);
+    public function findWhere(array $where, array $columns = ['*']);
 
     /**
      * Order results by.
      *
-     * @param string $column
-     * @param string $direction
+     * @param mixed       $column
+     * @param string|null $direction
      *
-     * @return self
+     * @return static
      */
-    public function orderBy($column, $direction);
+    public function orderBy(mixed $column, string|null $direction);
 
     /**
      * Filter results by given query params.
      *
-     * @param string $queries
+     * @param string|array $queries
      *
-     * @return self
+     * @return static
      */
-    public function search($queries);
+    public function search(string|array $queries);
 
     /**
      * Retrieve all data of repository
@@ -94,37 +99,37 @@ interface RepositoryContract
      *
      * @return Collection
      */
-    public function all($columns = ['*']);
+    public function all(array $columns = ['*']);
 
     /**
      * Get an array with the values of a given column.
      *
-     * @param string $value
-     * @param string $key
+     * @param string      $value
+     * @param string|null $key
      *
-     * @return array
+     * @return array<TKey, TValue>
      */
-    public function pluck($value, $key = null);
+    public function pluck(string $value, string $key = null);
 
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param null  $limit
-     * @param array $columns
+     * @param mixed        $per_page
+     * @param string|array $columns
      *
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function paginate($limit = null, $columns = ['*']);
+    public function paginate(mixed $per_page = null, string|array $columns = ['*']);
 
     /**
      * Retrieve all data of repository, paginated
      *
-     * @param null  $limit
-     * @param array $columns
+     * @param mixed        $per_page
+     * @param string|array $columns
      *
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function simplePaginate($limit = null, $columns = ['*']);
+    public function simplePaginate(mixed $per_page = null, string|array $columns = ['*']);
 
     /**
      * Save a new entity in repository
@@ -151,10 +156,9 @@ interface RepositoryContract
      * @param mixed $entity
      *
      * @return bool|null
-     *
      * @throws \Exception
      */
-    public function delete($entity);
+    public function delete(mixed $entity);
 
     /**
      * Get the raw SQL statements for the request
@@ -169,9 +173,9 @@ interface RepositoryContract
      * @param string $message
      * @param string $key
      *
-     * @return self
+     * @return static
      */
-    public function addError($message, string $key = 'message');
+    public function addError(string $message, string $key = 'message');
 
     /**
      * Get the repository's error messages.
@@ -187,5 +191,5 @@ interface RepositoryContract
      *
      * @return string
      */
-    public function getErrorMessage($default = '');
+    public function getErrorMessage(string $default = ''): string;
 }
