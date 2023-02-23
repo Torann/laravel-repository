@@ -6,7 +6,21 @@ use Torann\LaravelRepository\Test\TestCase;
 
 class AbstractRepositoryTest extends TestCase
 {
-    protected $hits;
+    /**
+     * @test
+     */
+    public function preventInvalidUserInput()
+    {
+        $repo = $this->makeRepository();
+
+        $repo->builderMock
+            ->shouldReceive('paginate')->once()
+            ->with(15, ['*'], 'page', 0)
+            ->andReturn(true);
+
+        // Ensure the package casts the per page limit correctly and returns the default 15
+        $this->assertEquals(true, $repo->paginate('select *'));
+    }
 
     /**
      * @test
@@ -27,7 +41,7 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testPluck()
     {
-        $expectedArray = [
+        $expected_array = [
             [
                 'title' => 'admin',
                 'name' => 'Bill',
@@ -35,16 +49,16 @@ class AbstractRepositoryTest extends TestCase
             [
                 'title' => 'user',
                 'name' => 'Kelly',
-            ]
+            ],
         ];
 
         $repo = $this->makeRepository();
 
         $repo->builderMock
             ->shouldReceive('pluck')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->pluck('title', 'name'));
+        $this->assertEquals($expected_array, $repo->pluck('title', 'name'));
     }
 
     /**
@@ -80,7 +94,7 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testFind()
     {
-        $expectedArray = [
+        $expected_array = [
             'id' => 123,
             'email' => 'admin@mail.com',
             'name' => 'Bill',
@@ -90,9 +104,9 @@ class AbstractRepositoryTest extends TestCase
 
         $repo->builderMock
             ->shouldReceive('find')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->find($expectedArray['id']));
+        $this->assertEquals($expected_array, $repo->find($expected_array['id']));
     }
 
     /**
@@ -100,7 +114,7 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testFindBy()
     {
-        $expectedArray = [
+        $expected_array = [
             'id' => 123,
             'email' => 'admin@mail.com',
             'name' => 'Bill',
@@ -111,13 +125,13 @@ class AbstractRepositoryTest extends TestCase
 
         $repo->builderMock
             ->shouldReceive('where')->once()
-            ->with('id', '=', $expectedArray['id'])->once()
+            ->with('id', '=', $expected_array['id'])->once()
             ->andReturn($query);
 
         $query->shouldReceive('first')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->findBy('id', $expectedArray['id']));
+        $this->assertEquals($expected_array, $repo->findBy('id', $expected_array['id']));
     }
 
     /**
@@ -125,7 +139,7 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testFindAllBy()
     {
-        $expectedArray = [
+        $expected_array = [
             [
                 'id' => 123,
                 'email' => 'admin@mail.com',
@@ -135,7 +149,7 @@ class AbstractRepositoryTest extends TestCase
                 'id' => 124,
                 'email' => 'admin@mail.com',
                 'name' => 'Todd',
-            ]
+            ],
         ];
 
         $repo = $this->makeRepository();
@@ -147,9 +161,9 @@ class AbstractRepositoryTest extends TestCase
             ->andReturn($query);
 
         $query->shouldReceive('get')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->findAllBy('email', 'admin@mail.com'));
+        $this->assertEquals($expected_array, $repo->findAllBy('email', 'admin@mail.com'));
     }
 
     /**
@@ -159,7 +173,7 @@ class AbstractRepositoryTest extends TestCase
     {
         $ids = [1, 33];
 
-        $expectedArray = [
+        $expected_array = [
             [
                 'id' => 1,
                 'email' => 'admin@mail.com',
@@ -169,7 +183,7 @@ class AbstractRepositoryTest extends TestCase
                 'id' => 33,
                 'email' => 'admin@mail.com',
                 'name' => 'Todd',
-            ]
+            ],
         ];
 
         $repo = $this->makeRepository();
@@ -181,9 +195,9 @@ class AbstractRepositoryTest extends TestCase
             ->andReturn($query);
 
         $query->shouldReceive('get')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->findAllBy('id', $ids));
+        $this->assertEquals($expected_array, $repo->findAllBy('id', $ids));
     }
 
     /**
@@ -191,12 +205,12 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testFindWhere()
     {
-        $expectedArray = [
+        $expected_array = [
             [
                 'id' => 123,
                 'email' => 'admin@mail.com',
                 'name' => 'Bill',
-            ]
+            ],
         ];
 
         $repo = $this->makeRepository();
@@ -205,10 +219,10 @@ class AbstractRepositoryTest extends TestCase
             ->shouldReceive('where')->once()
             ->with('id', '=', 123)->once()
             ->shouldReceive('get')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->findWhere([
-            'id' => 123
+        $this->assertEquals($expected_array, $repo->findWhere([
+            'id' => 123,
         ]));
     }
 
@@ -217,12 +231,12 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testFindWhereWithConditions()
     {
-        $expectedArray = [
+        $expected_array = [
             [
                 'id' => 123,
                 'email' => 'admin@mail.com',
                 'name' => 'Bill',
-            ]
+            ],
         ];
 
         $repo = $this->makeRepository();
@@ -231,10 +245,10 @@ class AbstractRepositoryTest extends TestCase
             ->shouldReceive('where')->once()
             ->with('id', '<', 123)->once()
             ->shouldReceive('get')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->findWhere([
-            ['id', '<', 123]
+        $this->assertEquals($expected_array, $repo->findWhere([
+            ['id', '<', 123],
         ]));
     }
 
@@ -266,7 +280,7 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testFindUsingScope()
     {
-        $expectedArray = [
+        $expected_array = [
             [
                 'id' => 123,
                 'email' => 'admin@mail.com',
@@ -278,7 +292,7 @@ class AbstractRepositoryTest extends TestCase
                 'email' => 'admin@mail.com',
                 'name' => 'Todd',
                 'is_admin' => true,
-            ]
+            ],
         ];
 
         $repo = $this->makeRepository();
@@ -290,8 +304,8 @@ class AbstractRepositoryTest extends TestCase
             ->andReturn($query);
 
         $query->shouldReceive('get')->once()
-            ->andReturn($expectedArray);
+            ->andReturn($expected_array);
 
-        $this->assertEquals($expectedArray, $repo->adminOnlyScope()->all());
+        $this->assertEquals($expected_array, $repo->adminOnlyScope()->all());
     }
 }

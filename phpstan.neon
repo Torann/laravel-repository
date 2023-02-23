@@ -1,7 +1,6 @@
 parameters:
-    excludes_analyse:
+    reportUnmatchedIgnoredErrors: false
+    excludePaths:
         - vendor
-        - resources
     ignoreErrors:
         - '#Function config_path not found#'
-        - '#Access to an undefined property Torann\\LaravelRepository\\Repositories\\AbstractRepository::\$model#'
