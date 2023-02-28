@@ -86,11 +86,11 @@ interface RepositoryContract
     /**
      * Filter results by given query params.
      *
-     * @param string|array $queries
+     * @param string|array|null $queries
      *
      * @return static
      */
-    public function search(string|array $queries);
+    public function search(string|array|null $queries);
 
     /**
      * Retrieve all data of repository
