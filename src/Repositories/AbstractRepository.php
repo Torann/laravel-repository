@@ -355,7 +355,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * {@inheritDoc}
      */
-    public function search(string|array $queries)
+    public function search(string|array|null $queries)
     {
         // Adjust for simple search queries
         if (is_string($queries)) {
