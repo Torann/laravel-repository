@@ -38,7 +38,7 @@ abstract class AbstractRepository implements RepositoryContract
     /**
      * @var \Illuminate\Support\MessageBag
      */
-    protected MessageBag $message_bag;
+    protected MessageBag|null $message_bag = null;
 
     /**
      * @var \Illuminate\Database\Eloquent\Builder
