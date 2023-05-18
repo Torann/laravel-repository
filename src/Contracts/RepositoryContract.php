@@ -3,6 +3,7 @@
 namespace Torann\LaravelRepository\Contracts;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\MessageBag;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -168,24 +169,59 @@ interface RepositoryContract
     public function toSql();
 
     /**
-     * Add a message to the repository's error messages.
-     *
+     * @return MessageBag
+     */
+    public function getMessageBag(): MessageBag;
+
+    /**
      * @param string $message
      * @param string $key
      *
      * @return static
      */
-    public function addError(string $message, string $key = 'message');
+    public function addMessage(string $message, string $key = 'message'): static;
 
     /**
-     * Get the repository's error messages.
+     * @param string $key
      *
-     * @return \Illuminate\Support\MessageBag
+     * @return bool
      */
-    public function getErrors();
+    public function hasMessage(string $key = 'message'): bool;
 
     /**
-     * Get the repository's first error message.
+     * @param string|null $key
+     * @param string|null $format
+     * @param string      $default
+     *
+     * @return string
+     */
+    public function getMessage(string $key = null, string $format = null, string $default = ''): string;
+
+    /**
+     * Add an error to the message box
+     *
+     * @return bool
+     */
+    public function addError(string $message);
+
+    /**
+     * Determine if any errors were reported
+     *
+     * @return bool
+     */
+    public function hasErrors(): bool;
+
+    /**
+     * Get all error messages.
+     *
+     * @param string|null $format
+     *
+     * @return array
+     */
+    public function getErrors(): array;
+
+    /**
+     * Get a single error message.
      *
      * @param string $default
      *
