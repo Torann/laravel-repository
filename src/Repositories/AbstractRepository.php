@@ -36,11 +36,9 @@ abstract class AbstractRepository implements RepositoryContract
     protected $modelInstance;
 
     /**
-     * The errors message bag instance
-     *
      * @var \Illuminate\Support\MessageBag
      */
-    protected $errors;
+    protected MessageBag $message_bag;
 
     /**
      * @var \Illuminate\Database\Eloquent\Builder
@@ -681,33 +679,69 @@ abstract class AbstractRepository implements RepositoryContract
         return $this;
     }
 
+
     /**
-     * Add a message to the repository's error messages.
-     *
-     * @param string $message
-     * @param string $key
-     *
-     * @return static
+     * {@inheritDoc}
      */
-    public function addError(string $message, string $key = 'message')
+    public function getMessageBag(): MessageBag
     {
-        $this->getErrors()->add($key, $message);
+        if ($this->message_bag === null) {
+            $this->message_bag = new MessageBag;
+        }
+
+        return $this->message_bag;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function addMessage(string $message, string $key = 'message'): static
+    {
+        $this->getMessageBag()->add($key, $message);
 
         return $this;
     }
 
     /**
-     * Get the repository's error messages.
-     *
-     * @return \Illuminate\Support\MessageBag
+     * {@inheritDoc}
      */
-    public function getErrors()
+    public function hasMessage(string $key = 'message'): bool
     {
-        if ($this->errors === null) {
-            $this->errors = new MessageBag;
-        }
+        return $this->getMessageBag()->has($key);
+    }
 
-        return $this->errors;
+    /**
+     * {@inheritDoc}
+     */
+    public function getMessage(string $key = null, string $format = null, string $default = ''): string
+    {
+        return $this->getMessageBag()->first($key, $format) ?: $default;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function addError(string $message)
+    {
+        $this->addMessage($message, 'error');
+
+        return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasErrors(): bool
+    {
+        return $this->getMessageBag()->has('error');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getErrors(string $format = null): array
+    {
+        return $this->getMessageBag()->get('error', $format);
     }
 
     /**
@@ -715,7 +749,7 @@ abstract class AbstractRepository implements RepositoryContract
      */
     public function getErrorMessage(string $default = ''): string
     {
-        return $this->getErrors()->first('message') ?: $default;
+        return $this->getMessage('error') ?: $default;
     }
 
     /**
