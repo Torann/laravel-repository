@@ -3,9 +3,10 @@
 namespace Torann\LaravelRepository\Test\Stubs;
 
 use Mockery;
-use Torann\LaravelRepository\Repositories\AbstractRepository;
+use Illuminate\Database\Eloquent\Model;
+use Torann\LaravelRepository\Repository;
 
-class TestRepository extends AbstractRepository
+class TestRepository extends Repository
 {
     public $builderMock;
 
@@ -13,7 +14,7 @@ class TestRepository extends AbstractRepository
 
     public $skipCacheCheck = false;
 
-    public function makeModel()
+    public function makeModel(): Model
     {
         $this->builderMock = Mockery::mock('Illuminate\Database\Eloquent\Builder');
 
@@ -33,7 +34,7 @@ class TestRepository extends AbstractRepository
         });
     }
 
-    public function skippedCache()
+    public function skippedCache(): bool
     {
         if ($this->skipCacheCheck === true) return false;
 

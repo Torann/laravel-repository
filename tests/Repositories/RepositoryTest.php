@@ -2,9 +2,10 @@
 
 namespace Torann\LaravelRepository\Test\Repositories;
 
+use Illuminate\Support\Collection;
 use Torann\LaravelRepository\Test\TestCase;
 
-class AbstractRepositoryTest extends TestCase
+class RepositoryTest extends TestCase
 {
     /**
      * @test
@@ -27,13 +28,15 @@ class AbstractRepositoryTest extends TestCase
      */
     public function shouldGetAll()
     {
+        $return = new Collection('foo');
+
         $repo = $this->makeRepository();
 
         $repo->builderMock
             ->shouldReceive('get')->once()
-            ->andReturn('foo');
+            ->andReturn($return);
 
-        $this->assertEquals('foo', $repo->all());
+        $this->assertEquals($return, $repo->all());
     }
 
     /**
@@ -280,7 +283,7 @@ class AbstractRepositoryTest extends TestCase
      */
     public function testFindUsingScope()
     {
-        $expected_array = [
+        $expected = new Collection([
             [
                 'id' => 123,
                 'email' => 'admin@mail.com',
@@ -293,7 +296,7 @@ class AbstractRepositoryTest extends TestCase
                 'name' => 'Todd',
                 'is_admin' => true,
             ],
-        ];
+        ]);
 
         $repo = $this->makeRepository();
         $query = $this->makeMockQuery();
@@ -304,8 +307,8 @@ class AbstractRepositoryTest extends TestCase
             ->andReturn($query);
 
         $query->shouldReceive('get')->once()
-            ->andReturn($expected_array);
+            ->andReturn($expected);
 
-        $this->assertEquals($expected_array, $repo->adminOnlyScope()->all());
+        $this->assertEquals($expected, $repo->adminOnlyScope()->all());
     }
 }
