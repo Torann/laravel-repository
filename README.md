@@ -1,6 +1,5 @@
 # Laravel Repository
 
-[![Build Status](https://app.travis-ci.com/Torann/laravel-repository.svg?branch=master)](https://app.travis-ci.com/Torann/laravel-repository)
 [![Latest Stable Version](https://poser.pugx.org/torann/laravel-repository/v/stable.png)](https://packagist.org/packages/torann/laravel-repository)
 [![Total Downloads](https://poser.pugx.org/torann/laravel-repository/downloads.png)](https://packagist.org/packages/torann/laravel-repository)
 [![Patreon donate button](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://www.patreon.com/torann)
