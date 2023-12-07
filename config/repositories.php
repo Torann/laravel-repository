@@ -31,4 +31,18 @@ return [
      */
 
     'cache_skip_param' => 'skipCache',
+
+    /*
+     |--------------------------------------------------------------------------
+     | Core Scopes
+     |--------------------------------------------------------------------------
+     |
+     | Use this to the core scopes used for such things as searching and ordering.
+     |
+     */
+
+    'scopes' => [
+        'search' => 'Torann\LaravelRepository\Scopes\Search',
+        'order_by' => 'Torann\LaravelRepository\Scopes\OrderBy',
+    ],
 ];
