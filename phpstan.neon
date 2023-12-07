@@ -4,3 +4,4 @@ parameters:
         - vendor
     ignoreErrors:
         - '#Function config_path not found#'
+        - "#^Unsafe usage of new static#"

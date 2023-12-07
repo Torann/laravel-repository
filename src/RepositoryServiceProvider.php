@@ -3,7 +3,6 @@
 namespace Torann\LaravelRepository;
 
 use Illuminate\Support\ServiceProvider;
-use Torann\LaravelRepository\Repositories\AbstractRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
