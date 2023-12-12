@@ -14,6 +14,13 @@ interface Scope
     public static function make(...$arguments): static;
 
     /**
+     * Determine if the scope be skipped
+     *
+     * @return bool
+     */
+    public function shouldSkip(): bool;
+
+    /**
      * Apply the scope
      *
      * @param Builder    $builder

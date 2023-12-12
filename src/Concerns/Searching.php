@@ -86,10 +86,10 @@ trait Searching
             ];
         }
 
-        if (is_array($queries)) {
+        if (is_array($queries) && empty($queries) === false) {
             /** @var Scope|null $scope */
             if ($scope = $this->resolveScope('search')) {
-                $this->addScopeQuery($scope::make($queries));
+                $this->addScopeQuery($scope::make($queries), 'search');
             }
         }
 

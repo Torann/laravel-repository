@@ -19,29 +19,32 @@ trait Ordering
     protected array $orderBy = [];
 
     /**
-     * One time skip of ordering. This is done when the
-     * ordering is overwritten by the orderBy method.
+     * Override of default order by column and direction pairs.
      */
-    protected bool $skipOrderingOnce = false;
+    protected array|null $orderByOverride = null;
 
     /**
      * {@inheritDoc}
      */
     public function orderBy(mixed $column, string|null $direction): static
     {
-        // Ensure the sort is valid
-        if (in_array($column, $this->getOrderableKeys()) === false) {
-            return $this;
+        if (in_array($column, $this->getOrderableKeys())) {
+            $this->orderByOverride = [];
+
+            $this->orderByOverride[$column] = in_array(strtolower($direction ?? ''), ['desc', 'asc'])
+                ? $direction
+                : 'asc';
         }
 
-        /** @var Scope|null $scope */
-        if ($scope = $this->resolveScope('order_by')) {
-            $this->skipOrderingOnce = true;
+        return $this;
+    }
 
-            $this->addScopeQuery($scope::make(
-                Arr::get($this->getOrderable(), $column, $column), $direction
-            ));
-        }
+    /**
+     * @return static
+     */
+    public function resetOrderBy(): static
+    {
+        $this->orderByOverride = null;
 
         return $this;
     }
@@ -64,6 +67,16 @@ trait Ordering
      * @return array
      */
     public function getOrderBy(): array
+    {
+        return $this->orderByOverride ?? $this->getDefaultOrderBy();
+    }
+
+    /**
+     * Return the default order by array.
+     *
+     * @return array
+     */
+    public function getDefaultOrderBy(): array
     {
         return $this->orderBy;
     }
@@ -115,6 +128,25 @@ trait Ordering
         return array_values(array_map(function ($value, $key) {
             return (is_array($value) || is_numeric($key) === false) ? $key : $value;
         }, $return, array_keys($return)));
+    }
+
+    /**
+     * @param string $column
+     * @param string $direction
+     *
+     * @return $this
+     */
+    protected function applyOrderableScope(string $column, string $direction): static
+    {
+        /** @var Scope|null $scope */
+        if ($scope = $this->resolveScope('order_by')) {
+            $this->addScopeQuery($scope::make(
+                Arr::get($this->getOrderable(), $column, $column),
+                $direction
+            ), 'order_by');
+        }
+
+        return $this;
     }
 
     /**

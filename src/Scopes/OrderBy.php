@@ -24,6 +24,14 @@ class OrderBy extends Scope
     /**
      * {@inheritDoc}
      */
+    public function shouldSkip(): bool
+    {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function apply(Builder $builder, Repository $repository): Builder
     {
         $column = $this->column;

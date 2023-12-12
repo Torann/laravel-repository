@@ -95,15 +95,15 @@ abstract class Repository implements RepositoryContract
 
         $this->query = $this->getNew()->newQuery();
 
-        // Apply order by
-        if ($skipOrdering === false && $this->skipOrderingOnce === false) {
-            foreach ($this->getOrderBy() as $column => $dir) {
-                $this->query->orderBy($column, $dir);
+        // Apply order by scope. Only one order by is allowed, for more create a
+        // new scope or override the method.
+        if ($skipOrdering === false) {
+            if (empty($order_by = $this->getOrderBy()) === false) {
+                $this->applyOrderableScope(
+                    key($order_by), reset($order_by)
+                );
             }
         }
-
-        // Reset the one time skip
-        $this->skipOrderingOnce = false;
 
         $this->applyScope();
 

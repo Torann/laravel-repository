@@ -88,12 +88,22 @@ trait Scopes
      * Add query scope.
      *
      * @param Closure|Scope $scope
+     * @param string|null   $key
      *
      * @return static
      */
-    public function addScopeQuery(Closure|Scope $scope): static
+    public function addScopeQuery(Closure|Scope $scope, string $key = null): static
     {
-        $this->scopeQuery[] = $scope;
+        if ($scope instanceof Scope && $scope->shouldSkip()) {
+            return $this;
+        }
+
+        // Prevent dupes when using some scopes
+        if ($key) {
+            $this->scopeQuery[$key] = $scope;
+        } else {
+            $this->scopeQuery[] = $scope;
+        }
 
         return $this;
     }

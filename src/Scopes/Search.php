@@ -22,6 +22,14 @@ class Search extends Scope
     /**
      * {@inheritDoc}
      */
+    public function shouldSkip(): bool
+    {
+        return empty($this->queries);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function apply(Builder $builder, Repository $repository): Builder
     {
         $searchable = $this->getSearchable($repository);
