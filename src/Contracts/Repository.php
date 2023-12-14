@@ -88,10 +88,11 @@ interface Repository
      * Filter results by given query params.
      *
      * @param string|array|null $queries
+     * @param array             $options
      *
      * @return static
      */
-    public function search(string|array|null $queries): static;
+    public function search(string|array|null $queries, array $options = []): static;
 
     /**
      * Retrieve all data of repository

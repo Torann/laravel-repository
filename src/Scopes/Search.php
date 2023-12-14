@@ -11,8 +11,9 @@ class Search extends Scope
 
     /**
      * @param array $queries
+     * @param array $options
      */
-    public function __construct(array $queries)
+    public function __construct(array $queries, array $options = [])
     {
         $this->queries = array_filter($queries, function ($value) {
             return blank($value) === false;

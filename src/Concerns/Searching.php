@@ -78,7 +78,7 @@ trait Searching
     /**
      * {@inheritDoc}
      */
-    public function search(string|array|null $queries): static
+    public function search(string|array|null $queries, array $options = []): static
     {
         if (is_string($queries)) {
             $queries = [
@@ -89,7 +89,7 @@ trait Searching
         if (is_array($queries) && empty($queries) === false) {
             /** @var Scope|null $scope */
             if ($scope = $this->resolveScope('search')) {
-                $this->addScopeQuery($scope::make($queries), 'search');
+                $this->addScopeQuery($scope::make($queries, $options), 'search');
             }
         }
 
