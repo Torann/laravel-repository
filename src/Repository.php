@@ -179,6 +179,25 @@ abstract class Repository implements RepositoryContract
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function findFirstWhere(array $where, array $columns = ['*'])
+    {
+        $this->newQuery();
+
+        foreach ($where as $field => $value) {
+            if (is_array($value)) {
+                [$field, $condition, $val] = $value;
+                $this->query->where($field, $condition, $val);
+            } else {
+                $this->query->where($field, '=', $value);
+            }
+        }
+
+        return $this->query->first($columns);
+    }
+
+    /**
      * Set the "limit" value of the query.
      *
      * @param mixed $limit
