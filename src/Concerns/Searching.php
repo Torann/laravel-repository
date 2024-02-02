@@ -41,8 +41,10 @@ trait Searching
         }
 
         foreach ($values as $key => $value) {
-            if ($safe === true && isset($this->searchable[$key])) {
-                continue;
+            if ($safe === true) {
+                if (isset($this->searchable[$key]) || array_search($key, $this->searchable) !== false) {
+                    continue;
+                }
             }
 
             $this->searchable[$key] = $value;
