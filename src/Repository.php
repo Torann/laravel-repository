@@ -219,7 +219,7 @@ abstract class Repository implements RepositoryContract
     /**
      * {@inheritDoc}
      */
-    public function pluck(string $value, string $key = null): array
+    public function pluck(string $value, string|null $key = null): array
     {
         $this->newQuery();
 

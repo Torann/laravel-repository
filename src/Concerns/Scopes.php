@@ -92,7 +92,7 @@ trait Scopes
      *
      * @return static
      */
-    public function addScopeQuery(Closure|Scope $scope, string $key = null): static
+    public function addScopeQuery(Closure|Scope $scope, string|null $key = null): static
     {
         if ($scope instanceof Scope && $scope->shouldSkip()) {
             return $this;

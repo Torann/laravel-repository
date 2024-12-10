@@ -161,11 +161,11 @@ trait Ordering
      * @return string
      */
     public function addOrderByJoin(
-        Builder $query,
-        string  $joining_table,
-        string  $foreign_key,
-        string  $related_key,
-        string  $alias = null
+        Builder     $query,
+        string      $joining_table,
+        string      $foreign_key,
+        string      $related_key,
+        string|null $alias = null
     ): string {
         // We need to join to the intermediate table
         $local_table = $this->getModel()->getTable();

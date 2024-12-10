@@ -41,7 +41,7 @@ trait Messages
     /**
      * {@inheritDoc}
      */
-    public function getMessage(string $key = null, string $format = null, string $default = ''): string
+    public function getMessage(string|null $key = null, string|null $format = null, string $default = ''): string
     {
         return $this->getMessageBag()->first($key, $format) ?: $default;
     }
@@ -67,7 +67,7 @@ trait Messages
     /**
      * {@inheritDoc}
      */
-    public function getErrors(string $format = null): array
+    public function getErrors(string|null $format = null): array
     {
         return $this->getMessageBag()->get('error', $format);
     }

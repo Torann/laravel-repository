@@ -120,7 +120,7 @@ interface Repository
      *
      * @return array<TKey, TValue>
      */
-    public function pluck(string $value, string $key = null): array;
+    public function pluck(string $value, string|null $key = null): array;
 
     /**
      * Retrieve all data of repository, paginated
@@ -205,7 +205,7 @@ interface Repository
      *
      * @return string
      */
-    public function getMessage(string $key = null, string $format = null, string $default = ''): string;
+    public function getMessage(string|null $key = null, string|null $format = null, string $default = ''): string;
 
     /**
      * Add an error to the message bag

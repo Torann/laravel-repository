@@ -67,7 +67,7 @@ trait Cacheable
      *
      * @return string
      */
-    public function getCacheKey(string $method, array $args = null, string $tag = ''): string
+    public function getCacheKey(string $method, array|null $args = null, string $tag = ''): string
     {
         // Sort through arguments
         foreach ($args as &$a) {
@@ -98,7 +98,7 @@ trait Cacheable
      *
      * @return mixed
      */
-    public function cacheCallback(string $method, array $args, Closure $callback, int $time = null): mixed
+    public function cacheCallback(string $method, array $args, Closure $callback, int|null $time = null): mixed
     {
         // Cache disabled, just execute query & return result
         if ($this->skippedCache() === true) {

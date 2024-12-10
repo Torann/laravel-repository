@@ -135,11 +135,11 @@ trait Searching
      * @return string
      */
     public function addSearchJoin(
-        Builder $query,
-        string  $joining_table,
-        string  $foreign_key,
-        string  $related_key,
-        string  $alias = null
+        Builder     $query,
+        string      $joining_table,
+        string      $foreign_key,
+        string      $related_key,
+        string|null $alias = null
     ): string {
         // We need to join to the intermediate table
         $local_table = $this->getModel()->getTable();
